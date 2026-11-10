@@ -15,7 +15,7 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background(Palette.background)
+        .background(FilamentBackground())
         .navigationTitle(Text("Settings"))
     }
 }
