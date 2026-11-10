@@ -21,14 +21,13 @@ struct RootView: View {
                     message: "Songs you import will appear here."
                 )
             case .practice:
-                EmptyState(
-                    systemImage: "pianokeys",
-                    title: "Nothing to practice yet",
-                    message: "Choose a song from the Library to start practicing."
-                )
+                PracticeView()
             case .settings:
                 SettingsView()
             }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) { DeviceStatusView() }
         }
     }
 }

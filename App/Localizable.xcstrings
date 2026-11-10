@@ -1,12 +1,42 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld keys": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld teclas"
+          }
+        }
+      }
+    },
+    "%lld ms": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ms"
+          }
+        }
+      }
+    },
     "Choose a song from the Library to start practicing.": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Escolha uma música na Biblioteca para começar a praticar."
+          }
+        }
+      }
+    },
+    "Keyboards": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teclados"
           }
         }
       }
@@ -31,6 +61,26 @@
         }
       }
     },
+    "Loading…": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carregando…"
+          }
+        }
+      }
+    },
+    "No keyboard connected": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum teclado conectado"
+          }
+        }
+      }
+    },
     "No songs yet": {
       "localizations": {
         "pt-BR": {
@@ -41,12 +91,42 @@
         }
       }
     },
+    "Note names": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nomes das notas"
+          }
+        }
+      }
+    },
     "Nothing to practice yet": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Nada para praticar ainda"
+          }
+        }
+      }
+    },
+    "Output delay": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atraso de saída"
+          }
+        }
+      }
+    },
+    "Piano": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Piano"
           }
         }
       }
@@ -81,12 +161,42 @@
         }
       }
     },
+    "Sound": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Som"
+          }
+        }
+      }
+    },
     "System": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Sistema"
+          }
+        }
+      }
+    },
+    "This output adds noticeable delay. Use wired headphones or speakers for practice.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta saída adiciona um atraso perceptível. Use fones com fio ou alto-falantes para praticar."
+          }
+        }
+      }
+    },
+    "macOS built-in sounds": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sons integrados do macOS"
           }
         }
       }

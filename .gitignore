@@ -12,3 +12,7 @@ xcuserdata/
 *.xcuserstate
 
 .DS_Store
+
+# Piano samples, fetched by Scripts/fetch-soundfonts.sh
+Resources/SoundFonts/*.sf2
+.soundfont-download/

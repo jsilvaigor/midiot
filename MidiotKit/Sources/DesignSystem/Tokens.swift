@@ -22,6 +22,13 @@ public enum Palette {
     public static let noteWrong = Color(hex: 0xF0625D)
     public static let noteEarly = Color(hex: 0x5BB8F5)
     public static let noteLate = Color(hex: 0xB58CF5)
+
+    // On-screen piano keys.
+    public static let keyWhite = Color(hex: 0xF4F1EA)
+    public static let keyWhiteShade = Color(hex: 0xD9D5CC)
+    public static let keyBlack = Color(hex: 0x0B0B0D)
+    public static let keyBlackShade = Color(hex: 0x2A2B30)
+    public static let keyLabel = Color(hex: 0x8A867D)
 }
 
 public enum Spacing {
@@ -41,7 +48,7 @@ public extension Font {
     static let displayTitle = Font.system(size: 28, weight: semiboldWeight, design: .rounded)
     static let sectionTitle = Font.system(size: 17, weight: semiboldWeight)
     static let bodyText = Font.system(size: 14)
-    static let caption = Font.system(size: 12)
+    static let captionText = Font.system(size: 12)
 
     private static let semiboldWeight = Font.Weight.semibold
 }
