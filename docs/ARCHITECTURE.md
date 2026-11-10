@@ -79,7 +79,7 @@ Value types shared by everything:
 
 - Wraps Verovio (C++ engraver, LGPLv3, has a Swift package binding). Input MusicXML, output SVG per system or page.
 - `ScoreView` shows the SVG, a cursor, and per-note colors addressed by element ID (SP-1, FB-1).
-- How the SVG reaches the screen is the main open question; see section 6.
+- The SVG is parsed into native paths (`ScoreScene`) and drawn in a SwiftUI `Canvas` (`ScoreCanvas`); no web view. This was settled by the phase 2 trial, recorded in [MILESTONE-1.md](MILESTONE-1.md).
 
 ### Practice
 
