@@ -16,4 +16,5 @@ Run the package tests with `swift test` inside `MidiotKit/`.
 
 - [Requirements](docs/REQUIREMENTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Design](docs/DESIGN.md)
 - [Milestone 1 plan](docs/MILESTONE-1.md)

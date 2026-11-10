@@ -3,17 +3,14 @@ import SwiftUI
 
 /// Main window: sidebar on the left, the selected section on the right.
 struct RootView: View {
-    @State private var section: AppSection? = .library
+    @State private var section: AppSection = .library
 
     var body: some View {
         NavigationSplitView {
-            List(AppSection.allCases, selection: $section) { section in
-                Label(section.title, systemImage: section.systemImage)
-                    .tag(section)
-            }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 260)
+            SidebarView(selection: $section, devices: [])
+                .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
-            switch section ?? .library {
+            switch section {
             case .library:
                 EmptyState(
                     systemImage: "music.note.list",
@@ -29,6 +26,53 @@ struct RootView: View {
             case .settings:
                 SettingsView()
             }
+        }
+    }
+}
+
+/// Wordmark, navigation groups and the connected-devices card.
+/// `devices` stays empty until MidiIO publishes real devices (milestone 1, phase 1).
+struct SidebarView: View {
+    @Binding var selection: AppSection
+    let devices: [DeviceStatus]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 26) {
+            Wordmark()
+                .padding(.horizontal, 12)
+
+            VStack(alignment: .leading, spacing: 2) {
+                SidebarHeading("Learn")
+                item(.library)
+                item(.practice)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                item(.settings)
+            }
+
+            Spacer(minLength: Spacing.l)
+
+            DeviceStatusCard(
+                title: "Connected",
+                emptyMessage: "No keyboard yet",
+                devices: devices
+            )
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 22)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Palette.sidebar)
+    }
+
+    private func item(_ section: AppSection) -> some View {
+        SidebarItem(
+            section.title,
+            systemImage: section.systemImage,
+            isSelected: selection == section
+        ) {
+            selection = section
         }
     }
 }
@@ -50,7 +94,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         switch self {
         case .library: "music.note.list"
         case .practice: "pianokeys"
-        case .settings: "gearshape"
+        case .settings: "slider.horizontal.3"
         }
     }
 }

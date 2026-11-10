@@ -18,7 +18,14 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [.macOS(.v26), .iOS(.v26)],
     products: modules.map { .library(name: $0.name, targets: [$0.name]) },
-    targets: modules.map { .target(name: $0.name, dependencies: $0.dependencies) } + [
+    targets: modules.map { module in
+        .target(
+            name: module.name,
+            dependencies: module.dependencies,
+            // Bundled typefaces, registered at launch by `Typography.registerFonts()`.
+            resources: module.name == "DesignSystem" ? [.copy("Fonts")] : nil
+        )
+    } + [
         .testTarget(name: "MusicCoreTests", dependencies: ["MusicCore"]),
     ],
     swiftLanguageModes: [.v6]

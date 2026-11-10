@@ -11,6 +11,16 @@
         }
       }
     },
+    "Connected": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectados"
+          }
+        }
+      }
+    },
     "Language": {
       "localizations": {
         "pt-BR": {
@@ -21,12 +31,32 @@
         }
       }
     },
+    "Learn": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprender"
+          }
+        }
+      }
+    },
     "Library": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Biblioteca"
+          }
+        }
+      }
+    },
+    "No keyboard yet": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum teclado ainda"
           }
         }
       }
