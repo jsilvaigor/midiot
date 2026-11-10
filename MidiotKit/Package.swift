@@ -23,7 +23,14 @@ let package = Package(
         // Verovio tags are not semantic versions (version-6.4.1), so the release is pinned by commit.
         .package(url: "https://github.com/rism-digital/verovio", revision: "fbe8f4695ab0a123cb096e0cf92354b44f7a2fb8"),
     ],
-    targets: modules.map { .target(name: $0.name, dependencies: $0.dependencies) } + [
+    targets: modules.map { module in
+        .target(
+            name: module.name,
+            dependencies: module.dependencies,
+            // Bundled typefaces, registered at launch by `Typography.registerFonts()`.
+            resources: module.name == "DesignSystem" ? [.copy("Fonts")] : nil
+        )
+    } + [
         .testTarget(name: "MusicCoreTests", dependencies: ["MusicCore"]),
         .testTarget(name: "MidiIOTests", dependencies: ["MidiIO"]),
         .testTarget(name: "DesignSystemTests", dependencies: ["DesignSystem"]),

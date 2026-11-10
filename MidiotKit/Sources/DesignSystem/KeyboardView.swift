@@ -80,8 +80,8 @@ public struct KeyboardView: View {
                 let text = isHighlighted ? naming.name(of: pitch) : naming.nameWithOctave(of: pitch)
                 context.draw(
                     Text(verbatim: text)
-                        .font(.system(size: labelSize, weight: isHighlighted ? .semibold : .regular))
-                        .foregroundStyle(isHighlighted ? Palette.background : Palette.keyLabel),
+                        .font(.sans(labelSize, weight: isHighlighted ? .semibold : .regular))
+                        .foregroundStyle(isHighlighted ? Palette.accentInk : Palette.keyLabel),
                     at: CGPoint(x: frame.midX, y: frame.maxY - labelSize)
                 )
             }
@@ -98,8 +98,8 @@ public struct KeyboardView: View {
             if highlights[pitch] != nil, frame.width >= 14 {
                 context.draw(
                     Text(verbatim: naming.name(of: pitch))
-                        .font(.system(size: labelSize * 0.8, weight: .semibold))
-                        .foregroundStyle(Palette.background),
+                        .font(.sans(labelSize * 0.8, weight: .semibold))
+                        .foregroundStyle(Palette.accentInk),
                     at: CGPoint(x: frame.midX, y: frame.maxY - labelSize)
                 )
             }

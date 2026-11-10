@@ -31,6 +31,16 @@
         }
       }
     },
+    "Connected": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectados"
+          }
+        }
+      }
+    },
     "Keyboards": {
       "localizations": {
         "pt-BR": {
@@ -47,6 +57,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Idioma"
+          }
+        }
+      }
+    },
+    "Learn": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprender"
           }
         }
       }
@@ -77,6 +97,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhum teclado conectado"
+          }
+        }
+      }
+    },
+    "No keyboard yet": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum teclado ainda"
           }
         }
       }

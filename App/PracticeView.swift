@@ -19,14 +19,13 @@ struct PracticeView: View {
             )
             keyboard
         }
-        .background(Palette.background)
     }
 
     private var keyboard: some View {
         let whiteKeys = model.range.pitches.count { !$0.isBlackKey }
         return KeyboardView(
             range: model.range,
-            highlights: Dictionary(uniqueKeysWithValues: model.pressed.map { ($0, Palette.accent) }),
+            highlights: Dictionary(uniqueKeysWithValues: model.pressed.map { ($0, Palette.handRight) }),
             naming: naming,
             onPress: model.mouseDown(on:),
             onRelease: model.mouseUp(on:)
@@ -38,7 +37,10 @@ struct PracticeView: View {
         .padding(.bottom, Spacing.m)
         .frame(maxWidth: .infinity)
         .background(Palette.surface)
-        .overlay(alignment: .top) { Palette.hairline.frame(height: 1) }
+        // The filament: the amber line where falling notes will meet the keys.
+        .overlay(alignment: .top) {
+            Palette.accent.frame(height: 2).filamentGlow()
+        }
     }
 }
 

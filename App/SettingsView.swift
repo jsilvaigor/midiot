@@ -45,7 +45,7 @@ struct SettingsView: View {
                 LabeledContent("Piano") { soundStatus }
                 if let latency = model.latency {
                     LabeledContent("Output delay") {
-                        Text("\(Int((latency.total * 1000).rounded())) ms")
+                        Text("\(Int((latency.total * 1000).rounded())) ms").font(.readoutSmall)
                     }
                     if latency.total > noticeableDelay {
                         Label(
@@ -59,7 +59,7 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background(Palette.background)
+        .background(FilamentBackground())
         .navigationTitle(Text("Settings"))
     }
 
