@@ -31,7 +31,7 @@ App
  ├─ DesignSystem
  ├─ Practice ──► MusicCore
  ├─ Notation ──► MusicCore, Verovio
- ├─ ScoreImport ► MusicCore, SwiftMIDI, Verovio
+ ├─ ScoreImport ► MusicCore, Verovio
  ├─ Library ───► MusicCore
  ├─ Sound ─────► MusicCore
  └─ MidiIO ────► MusicCore, SwiftMIDI
@@ -71,7 +71,7 @@ Value types shared by everything:
 
 ### ScoreImport
 
-- **MIDI files**: parsed with the `swift-midi-file` package from the same family. Tracks map to hands when there are exactly two piano tracks; otherwise a split-point heuristic assigns hands, and the user can correct it (SS-1).
+- **MIDI files**: parsed by a small reader in this module (`MIDIFile`). It reads only what practice needs: notes, tempo, time signatures, and track names. Tracks map to hands when there are exactly two piano tracks; otherwise a split-point heuristic assigns hands, and the user can correct it (SS-1).
 - **MusicXML**: loaded by Verovio. Notes, timing, staff (hand), and fingerings are read back from Verovio's timemap and element attributes, so the played `Song` and the drawn score share element IDs (SS-2).
 - **MIDI → sheet**: a MIDI file has no notation. A transcriber quantizes it and writes MusicXML, which then follows the MusicXML path. Output is a readable draft, not engraving quality.
 
@@ -126,7 +126,7 @@ Rules:
 
 | Component | Use | License | Note |
 | --- | --- | --- | --- |
-| SwiftMIDI packages (orchetect; formerly MIDIKit) | CoreMIDI wrapper, MIDI file parsing | MIT | `swift-midi-io` now, `swift-midi-file` in phase 3 |
+| SwiftMIDI `swift-midi-io` (orchetect; formerly MIDIKit) | CoreMIDI wrapper | MIT | |
 | Verovio | MusicXML engraving, timemap | LGPLv3 | Used unmodified, so no obligations beyond attribution for personal use |
 | Salamander Grand Piano | Piano samples | CC-BY 3.0 | Credit Alexander Holm |
 | GeneralUser GS | Wider palette (milestone 3) | GeneralUser GS License 2.0 | Permits personal music creation |
