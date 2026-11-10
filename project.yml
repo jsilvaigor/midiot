@@ -1,0 +1,46 @@
+# Xcode project definition. Regenerate with `xcodegen generate` after changing it.
+name: Midiot
+options:
+  bundleIdPrefix: dev.midiot
+  deploymentTarget:
+    macOS: "26.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  MidiotKit:
+    path: MidiotKit
+targets:
+  Midiot:
+    type: application
+    platform: macOS
+    sources: [App]
+    dependencies:
+      - { package: MidiotKit, product: MusicCore }
+      - { package: MidiotKit, product: MidiIO }
+      - { package: MidiotKit, product: Sound }
+      - { package: MidiotKit, product: ScoreImport }
+      - { package: MidiotKit, product: Notation }
+      - { package: MidiotKit, product: Practice }
+      - { package: MidiotKit, product: Library }
+      - { package: MidiotKit, product: DesignSystem }
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.midiot.Midiot
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.music
+        INFOPLIST_KEY_CFBundleDisplayName: Midiot
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        SWIFT_EMIT_LOC_STRINGS: YES
+schemes:
+  Midiot:
+    build:
+      targets:
+        Midiot: all
+    run:
+      config: Debug
