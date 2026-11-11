@@ -116,3 +116,20 @@ struct MIDIBuilder {
         #expect(song.notes.filter { $0.hand == .right }.map(\.pitch.midiNumber) == [74])
     }
 }
+
+@Suite struct SpellingTests {
+    @Test func spellingFollowsTheKey() {
+        // B♭ major: B♭ and E♭ need no accidental; in D minor the raised seventh is C♯, with one.
+        let flats = MusicXMLWriter.Spelling(fifths: -2, sharpened: nil)
+        #expect(flats.spell(Pitch(midiNumber: 70)).step == "B")
+        #expect(flats.spell(Pitch(midiNumber: 70)).alter == -1)
+        #expect(flats.spell(Pitch(midiNumber: 70)).accidental == nil)
+        #expect(flats.spell(Pitch(midiNumber: 71)).accidental == "natural")
+        let dMinor = MusicXMLWriter.Spelling(fifths: -1, sharpened: 1)
+        #expect(dMinor.spell(Pitch(midiNumber: 61)).step == "C")
+        #expect(dMinor.spell(Pitch(midiNumber: 61)).accidental == "sharp")
+        let sharps = MusicXMLWriter.Spelling(fifths: 2, sharpened: nil)
+        #expect(sharps.spell(Pitch(midiNumber: 66)).accidental == nil)
+        #expect(sharps.spell(Pitch(midiNumber: 65)).accidental == "natural")
+    }
+}

@@ -1,6 +1,7 @@
 import AppKit
 import DesignSystem
 import Library
+import MusicCore
 import SwiftUI
 
 /// Development aid: renders the app's screens to PNG files and quits, so their look can be
@@ -32,6 +33,8 @@ enum SnapshotMode {
         let model = AppModel(store: SongStore(root: storeRoot), seedsStarterSongs: false)
         model.start()
 
+        save(RootView(), model: model, to: folder.appendingPathComponent("today-first.png"))
+        model.section = .library
         save(RootView(), model: model, to: folder.appendingPathComponent("library-empty.png"))
 
         model.importSongs(from: songs)
@@ -68,7 +71,56 @@ enum SnapshotMode {
             }
         }
 
+        // Two complete runs with deliberate mistakes, then the review of the second.
+        if let session = model.session {
+            session.pause()
+            session.loopBars = nil
+            session.handMode = .both
+            session.waitsForPlayer = false
+            session.rate = 1.5
+            for run in 0..<2 {
+                session.seek(to: 0)
+                session.togglePlay()
+                var played = Set<Int>()
+                while session.isPlaying {
+                    let beat = session.beat
+                    for note in session.song.notes where !played.contains(note.id) {
+                        // The left hand rushes; bar 3 goes badly, worse on the first run.
+                        let lead = note.hand == .left ? 0.35 : 0.02
+                        guard note.start <= beat + lead else { continue }
+                        played.insert(note.id)
+                        let inBar3 = note.start >= 8 && note.start < 12
+                        if inBar3, note.hand == .right, note.id % (run == 0 ? 2 : 3) == 0 {
+                            model.mouseDown(on: Pitch(midiNumber: note.pitch.midiNumber + 1))
+                            model.mouseUp(on: Pitch(midiNumber: note.pitch.midiNumber + 1))
+                        } else {
+                            model.mouseDown(on: note.pitch)
+                            model.mouseUp(on: note.pitch)
+                        }
+                    }
+                    try? await Task.sleep(for: .milliseconds(8))
+                }
+                await waitUntil { session.review != nil }
+            }
+            save(RootView(), model: model, to: folder.appendingPathComponent("review.png"))
+            session.startSuggestedLoop()
+            try? await Task.sleep(for: .milliseconds(400))
+            save(RootView(), model: model, to: folder.appendingPathComponent("review-loop.png"))
+        }
+
         model.closeSong()
+        save(RootView(), model: model, to: folder.appendingPathComponent("library-progress.png"))
+
+        // A drill opened from the path, shown as a sheet.
+        model.section = .today
+        model.open(.scale(.bFlat), title: "B♭ major scale")
+        await waitUntil { model.session?.loaded.entry.format == .drill }
+        UserDefaults.standard.set("split", forKey: "practiceViewMode")
+        model.session?.seek(to: 2)
+        save(RootView(), model: model, to: folder.appendingPathComponent("drill.png"))
+        UserDefaults.standard.removeObject(forKey: "practiceViewMode")
+        model.closeSong()
+        save(RootView(), model: model, to: folder.appendingPathComponent("today.png"))
         model.section = .settings
         save(RootView(), model: model, to: folder.appendingPathComponent("settings.png"))
     }

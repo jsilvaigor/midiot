@@ -24,8 +24,8 @@ import Testing
             case let .click(isDownbeat): isDownbeat ? "CLICK" : "click"
             case .allNotesOff: "alloff"
             case .finished: "finished"
-            case let .judged(noteID, judgement): "\(judgement.rawValue)#\(noteID)"
-            case let .wrongKey(pitch): "wrong\(pitch.midiNumber)"
+            case let .judged(noteID, judgement, _): "\(judgement.rawValue)#\(noteID)"
+            case let .wrongKey(pitch, _): "wrong\(pitch.midiNumber)"
             case let .waiting(notes): "wait" + notes.map { String($0.pitch.midiNumber) }.joined(separator: "+")
             case .resumed: "resumed"
             case .judgementsCleared: "cleared"

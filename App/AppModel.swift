@@ -1,3 +1,4 @@
+import CryptoKit
 import DesignSystem
 import Foundation
 import Library
@@ -20,15 +21,27 @@ final class AppModel {
     }
 
     let devices = DeviceManager()
-    var section = AppSection.library
+    var section = AppSection.today
+    /// Minutes practiced per day and what was played through (requirement CU-6).
+    private(set) var log = PracticeLog()
+    /// Best whole-run accuracy per drill id.
+    private(set) var drillBest: [String: Double] = [:]
+    /// Minutes to practice each day.
+    var dailyGoal = UserDefaults.standard.object(forKey: "dailyGoalMinutes") as? Double ?? 25 {
+        didSet { UserDefaults.standard.set(dailyGoal, forKey: "dailyGoalMinutes") }
+    }
     /// Songs in the library, newest first.
-    private(set) var songs: [SongEntry] = []
+    private(set) var songs: [SongEntry] = [] { didSet { refreshProgress() } }
+    /// Best accuracy and last practice date per song, for the library table.
+    private(set) var progress: [UUID: (best: Double?, last: Date)] = [:]
     /// The song open on the Practice screen.
     private(set) var session: PracticeSession?
     /// Why the last import or open failed; shown until dismissed.
     var libraryError: String?
     private(set) var soundStatus = SoundStatus.loading
     private(set) var latency: AudioEngine.Latency?
+    /// Whether the sustain pedal is down (requirement HW-5).
+    private(set) var pedalIsDown = false
     /// Keys currently held, on any keyboard or with the mouse.
     private(set) var pressed: Set<Pitch> = []
     /// Keys shown by the on-screen keyboard.
@@ -43,6 +56,11 @@ final class AppModel {
     @ObservationIgnored private let activePlayer = PlayerBox()
 
     @ObservationIgnored private let seedsStarterSongs: Bool
+    /// Drills keep their run history beside the songs, in their own folder.
+    @ObservationIgnored private var drillStore: SongStore { SongStore(root: store.root.deletingLastPathComponent().appendingPathComponent("Drills")) }
+    @ObservationIgnored private var logURL: URL { store.root.deletingLastPathComponent().appendingPathComponent("practice-log.json") }
+    /// Where Back and Done lead from the Practice screen.
+    @ObservationIgnored private var returnSection = AppSection.library
 
     /// Milliseconds subtracted from every key press before it is judged, on top of the
     /// automatic allowance for audio output delay. Raise it if on-time notes are marked late.
@@ -65,6 +83,9 @@ final class AppModel {
         isStarted = true
 
         songs = store.entries()
+        if let data = try? Data(contentsOf: logURL), let saved = try? JSONDecoder().decode(PracticeLog.self, from: data) { log = saved }
+        refreshDrillBest()
+        trackPracticeTime()
         seedStarterSongsIfNeeded()
         audio.attach(piano)
         audio.attach(clicks)
@@ -110,6 +131,7 @@ final class AppModel {
         // A key held on a keyboard that was just unplugged would otherwise sound forever.
         piano.allNotesOff()
         pressed.removeAll()
+        pedalIsDown = false
         range = devices.devices.mainInstrument?.profile.range ?? .fortyNineKeys
         latency = audio.latency
         updatePressCompensation()
@@ -157,6 +179,13 @@ final class AppModel {
         }
     }
 
+    /// Sets where a MIDI song's notes divide between the hands; nil is automatic.
+    func setSplitPitch(_ pitch: Int?, for entry: SongEntry) {
+        if session?.loaded.entry.id == entry.id { closeSong() }
+        _ = try? store.setSplitPitch(pitch, for: entry)
+        songs = store.entries()
+    }
+
     func delete(_ entry: SongEntry) {
         if session?.loaded.entry.id == entry.id { closeSong() }
         try? store.delete(entry)
@@ -177,15 +206,22 @@ final class AppModel {
                     foldedRange = target
                 }
                 session?.stop()
-                let new = PracticeSession(loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks) { run in
-                    try? store.appendRun(run, for: entry)
-                }
+                let new = PracticeSession(
+                    loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks,
+                    history: { store.runs(for: entry) },
+                    onRunEnded: { [weak self] run in
+                        try? store.appendRun(run, for: entry)
+                        self?.refreshProgress()
+                        if run.completed { self?.markCompleted(entry.id.uuidString) }
+                    }
+                )
                 // With a keyboard connected, start in the mode a learner wants: play it yourself, unhurried.
                 if !devices.devices.isEmpty {
                     new.handMode = .both
                     new.waitsForPlayer = true
                 }
                 new.foldedRange = foldedRange
+                returnSection = section == .practice ? returnSection : section
                 session = new
                 activePlayer.player = new.player
                 section = .practice
@@ -195,11 +231,104 @@ final class AppModel {
         }
     }
 
+    // MARK: Drills and daily practice
+
+    /// Opens a generated drill on the Practice screen.
+    func open(_ drill: Drill, title: String) {
+        let store = drillStore
+        let key = drill.key
+        // Reading and rhythm drills change daily; everything else is fixed.
+        let day = UInt64(max(Date().timeIntervalSince1970 / 86_400, 0))
+        let id = Self.uuid(for: drill.id)
+        Task {
+            let loaded = await Task.detached(priority: .userInitiated) {
+                LoadedSong(
+                    generated: drill.song(title: title, seed: day), id: id,
+                    fifths: key.fifths, sharpened: key.isMinor ? (key.tonic + 11) % 12 : nil
+                )
+            }.value
+            session?.stop()
+            let new = PracticeSession(
+                loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks,
+                history: { store.runs(for: loaded.entry) },
+                onRunEnded: { [weak self] run in
+                    try? store.appendRun(run, for: loaded.entry)
+                    self?.refreshDrillBest()
+                    if run.completed { self?.markCompleted(drill.id) }
+                }
+            )
+            if !devices.devices.isEmpty {
+                if case .bassReading = drill {
+                    // Reading is about finding the note, not keeping time.
+                    new.handMode = .left
+                    new.waitsForPlayer = true
+                } else {
+                    new.handMode = .both
+                }
+            }
+            returnSection = section == .practice ? returnSection : section
+            session = new
+            activePlayer.player = new.player
+            section = .practice
+        }
+    }
+
+    /// A stable identifier for a drill, so its history folder is found again.
+    private static func uuid(for drillID: String) -> UUID {
+        let digest = Array(SHA256.hash(data: Data(drillID.utf8)))
+        return UUID(uuid: (digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7],
+                           digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]))
+    }
+
+    private func refreshDrillBest() {
+        let store = drillStore
+        var best: [String: Double] = [:]
+        for drill in Drill.catalog {
+            let entry = LoadedSongEntry.placeholder(id: Self.uuid(for: drill.id))
+            if let value = store.runs(for: entry).filter(\.completed).compactMap(\.accuracy).max() { best[drill.id] = value }
+        }
+        drillBest = best
+    }
+
+    private func markCompleted(_ id: String) {
+        log.markCompleted(id, on: Date())
+        saveLog()
+    }
+
+    private func saveLog() {
+        try? JSONEncoder().encode(log).write(to: logURL)
+    }
+
+    /// Counts time toward the daily goal while music is actually playing.
+    private func trackPracticeTime() {
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard let self else { return }
+                if self.session?.isPlaying == true {
+                    self.log.add(seconds: 5, on: Date())
+                    self.saveLog()
+                }
+            }
+        }
+    }
+
+    private func refreshProgress() {
+        var progress: [UUID: (best: Double?, last: Date)] = [:]
+        for entry in songs {
+            let runs = store.runs(for: entry)
+            guard let last = runs.last else { continue }
+            // Best counts whole-piece runs only; a perfect two-bar loop is not a best run.
+            progress[entry.id] = (runs.filter(\.completed).compactMap(\.accuracy).max(), last.date)
+        }
+        self.progress = progress
+    }
+
     func closeSong() {
         session?.stop()
         session = nil
         activePlayer.player = nil
-        section = .library
+        section = returnSection
     }
 
     // MARK: Playing
@@ -225,8 +354,8 @@ final class AppModel {
         case let .noteOff(pitch):
             pressed.remove(pitch)
             session?.released(pitch)
-        case .sustain:
-            break
+        case let .sustain(isDown):
+            pedalIsDown = isDown
         }
     }
 }
@@ -251,5 +380,15 @@ private final class PlayerBox: Sendable {
     /// Reports a key press to the open song, if any. `time` nil means now.
     func pressed(_ pitch: Pitch, at time: Double?) {
         player?.playerPressed(pitch, at: (time ?? SongPlayer.now) - pressCompensation)
+    }
+}
+
+/// Builds the minimal library entry needed to look up a generated song's run history.
+private enum LoadedSongEntry {
+    static func placeholder(id: UUID) -> SongEntry {
+        SongEntry(
+            id: id, title: "", addedAt: Date(timeIntervalSince1970: 0), format: .drill, fileName: "",
+            noteCount: 0, lowestPitch: 60, highestPitch: 60, durationSeconds: 0
+        )
     }
 }

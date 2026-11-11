@@ -1,4 +1,5 @@
 import DesignSystem
+import Library
 import MusicCore
 import Notation
 import SwiftUI
@@ -19,7 +20,9 @@ struct PracticeView: View {
     private let maxWhiteKeyWidth: CGFloat = 44
 
     var body: some View {
-        if let session = model.session {
+        if let session = model.session, let review = session.review {
+            ReviewView(session: session, review: review)
+        } else if let session = model.session {
             VStack(spacing: 0) {
                 header(session)
                 Palette.hairline.frame(height: 1)
@@ -56,7 +59,7 @@ struct PracticeView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: session.song.title).font(.displayTitle).foregroundStyle(Palette.textPrimary).lineLimit(1)
                 HStack(spacing: 6) {
-                    Text(verbatim: session.loaded.entry.format == .midi ? "MIDI" : "MusicXML")
+                    formatLabel(session.loaded.entry.format)
                     Text(verbatim: "·")
                     Text("\(session.song.measures.count) bars")
                     if let folded = session.foldedRange {
@@ -76,6 +79,14 @@ struct PracticeView: View {
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 16)
+    }
+
+    private func formatLabel(_ format: SongEntry.Format) -> Text {
+        switch format {
+        case .midi: Text(verbatim: "MIDI")
+        case .musicXML: Text(verbatim: "MusicXML")
+        case .drill: Text("Drill")
+        }
     }
 
     private func sheet(_ session: PracticeSession) -> some View {
@@ -117,9 +128,9 @@ struct PracticeView: View {
                 position: { session.beat }
             )
               .frame(minHeight: 160)
-              .overlay(alignment: .top) { StatusChip(session: session).padding(.top, 16) }
+              .overlay(alignment: .top) { StatusChip(session: session, pedalIsDown: model.pedalIsDown).padding(.top, 16) }
             } else {
-                StatusChip(session: session).padding(.vertical, 10)
+                StatusChip(session: session, pedalIsDown: model.pedalIsDown).padding(.vertical, 10)
             }
             keyboard(range: range, sounding: session.sounding, session: session)
         }
@@ -260,9 +271,12 @@ private struct TransportBar: View {
                 Stepper(value: $loopTo, in: 1...lastBar) {
                     Text("To bar") + Text(verbatim: "  \(loopTo)").font(.readoutSmall)
                 }
+                Toggle("Raise tempo as I improve", isOn: $session.adaptsTempo)
+                Text("Up 5% after three clean passes, down 5% after two poor ones.")
+                    .font(.sans(12)).foregroundStyle(Palette.textSecondary)
             }
             .padding(18)
-            .frame(width: 240)
+            .frame(width: 280)
             .onChange(of: loopFrom) { updateLoop(lastBar: lastBar) }
             .onChange(of: loopTo) { updateLoop(lastBar: lastBar) }
             .onAppear {
@@ -317,6 +331,7 @@ private struct TransportBar: View {
 /// Floating chip over the lane saying who is playing, or that the music is waiting.
 private struct StatusChip: View {
     let session: PracticeSession
+    var pedalIsDown = false
 
     var body: some View {
         let isWaiting = !session.awaited.isEmpty
@@ -334,6 +349,12 @@ private struct StatusChip: View {
             Circle().fill(color).frame(width: 8, height: 8).filamentGlow(color, radius: 5)
             Text(title).font(.sans(13, weight: .medium)).foregroundStyle(Palette.textPrimary)
             Text(detail).font(.sans(13)).foregroundStyle(Palette.textSecondary)
+            if pedalIsDown {
+                // The sustain pedal, shown while it is held (requirement HW-5).
+                Text("Pedal").font(.mono(11, weight: .medium)).foregroundStyle(Palette.accentInk)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Palette.accent, in: Capsule())
+            }
         }
         .padding(.leading, 12)
         .padding(.trailing, 16)

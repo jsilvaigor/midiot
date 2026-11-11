@@ -1,5 +1,7 @@
 import Foundation
 import MusicCore
+import Practice
+import ScoreImport
 import Testing
 @testable import Library
 
@@ -38,6 +40,14 @@ import Testing
         #expect(loaded.pages.count == 1)
         #expect(loaded.song.notes.allSatisfy { $0.notationID.map { loaded.pages[0].frames[$0] != nil } == true })
         #expect(loaded.song.measures.allSatisfy { $0.notationID != nil })
+
+        // Imported MIDI gets suggested fingering, and its hand split can be changed.
+        #expect(loaded.song.notes.allSatisfy { $0.finger != nil })
+        #expect(loaded.song.notes.map(\.hand) == [.right, .right])
+        let split = try store.setSplitPitch(72, for: entry)
+        #expect(try store.load(split).song.notes.map(\.hand) == [.left, .right])
+        #expect(store.entries().first?.splitPitch == 72)
+        try store.setSplitPitch(nil, for: split)
 
         #expect(store.runs(for: entry).isEmpty)
         let run = RunResult(
@@ -88,5 +98,21 @@ import Testing
         let unlinked = loaded.song.notes.filter { $0.notationID.map { frames[$0] != nil } != true }
         #expect(unlinked.isEmpty)
         #expect(Set(loaded.song.notes.compactMap(\.notationID)).count == 19)
+    }
+}
+
+@Suite struct GeneratedSongTests {
+    @Test func everyDrillEngravesWithAllNotesLinked() throws {
+        for drill in Drill.catalog {
+            let key = drill.key
+            let loaded = LoadedSong(
+                generated: drill.song(title: drill.id, seed: 3), id: UUID(),
+                fifths: key.fifths, sharpened: key.isMinor ? (key.tonic + 11) % 12 : nil
+            )
+            let frames = try #require(loaded.pages.first, "no sheet for \(drill.id)").frames
+            let unlinked = loaded.song.notes.filter { $0.notationID.map { frames[$0] != nil } != true }
+            #expect(unlinked.isEmpty, "\(drill.id): \(unlinked.count) notes not on the sheet")
+            #expect(loaded.entry.format == .drill)
+        }
     }
 }

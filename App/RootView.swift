@@ -13,6 +13,8 @@ struct RootView: View {
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
             switch model.section {
+            case .today:
+                TodayView()
             case .library:
                 LibraryView()
             case .practice:
@@ -46,6 +48,7 @@ struct SidebarView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 SidebarHeading("Learn")
+                item(.today)
                 item(.library)
                 item(.practice)
             }
@@ -81,12 +84,13 @@ struct SidebarView: View {
 }
 
 enum AppSection: String, CaseIterable, Identifiable {
-    case library, practice, settings
+    case today, library, practice, settings
 
     var id: String { rawValue }
 
     var title: LocalizedStringKey {
         switch self {
+        case .today: "Today"
         case .library: "Library"
         case .practice: "Practice"
         case .settings: "Settings"
@@ -95,6 +99,7 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
+        case .today: "calendar"
         case .library: "music.note.list"
         case .practice: "pianokeys"
         case .settings: "slider.horizontal.3"
