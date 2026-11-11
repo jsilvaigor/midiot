@@ -18,6 +18,7 @@ MidiotKit/                  local Swift package
     Notation/               sheet-music rendering
     Practice/               transport, matching, wait mode, scoring
     Library/                persistence: songs on disk, progress database
+    Sketch/                 capture, takes, harmony, moods, plays and cues
     DesignSystem/           colors, type, shared components
   Tests/
 Resources/                  SoundFonts, bundled songs, licenses
@@ -34,6 +35,7 @@ App
  ├─ ScoreImport ► MusicCore, Verovio
  ├─ Library ───► MusicCore
  ├─ Sound ─────► MusicCore
+ ├─ Sketch ────► MusicCore
  └─ MidiIO ────► MusicCore, SwiftMIDI
 ```
 
@@ -66,6 +68,7 @@ Value types shared by everything:
   - `SamplerInstrument`: `AVAudioUnitSampler` loading a SoundFont. Built in milestone 1.
   - `MIDIOutInstrument` and `AudioUnitInstrument`: later; they implement the same protocol.
 - Two instrument slots from the start: one for the user's playing, one for the part the app plays (other hand, backing).
+- `PaletteSynth`: Apple's multi-timbral General MIDI synthesizer with a different sound on each of sixteen channels (SN-2). The Sketchpad plays it live and gives each layer of a take its own channel. It reads GeneralUser GS when bundled, otherwise the sounds built into macOS.
 - `Metronome`: scheduled clicks on the audio clock, with count-in.
 - `LatencyCalibration`: stores an output offset per audio route; applied to visual timing and to scoring (SN-4).
 
@@ -92,6 +95,18 @@ Value types shared by everything:
 
 - Songs are plain files under `~/Library/Application Support/Midiot/Songs/<id>/`: the original import, the normalized MusicXML, and a small JSON sidecar (PL-3).
 - Progress and settings use SwiftData. It syncs through CloudKit when that is switched on later, which satisfies "iCloud-ready" without work now.
+
+### Sketch
+
+Everything the Sketchpad needs that has no screen (milestone 3). It depends only on `MusicCore`.
+
+- `CaptureHistory` keeps the last ten minutes of note and pedal events with their host times (CO-1). `CaptureBuffer` wraps it in a lock so the MIDI thread can write to it.
+- `Take` holds one or more `Layer`s of notes timed in beats at one tempo. Edits (trim, quantize, transpose, delete) return a new take (CO-2). `Take.song(title:)` converts it for the player and the score writers.
+- `Chord.detect` names the chord formed by the held keys; `SketchKey.detect` finds the key of recent playing with the Krumhansl–Kessler profiles; `ChordSuggestion.next` proposes three chords to follow (CO-3).
+- `MoodPalette` lists scales, chord moves, a tempo range and sounds for each dramatic intent (CO-4).
+- `Play`, `PlayScene` and `Cue` are the organizer (CO-5). `PlayStore` writes one JSON file per play under `~/Library/Application Support/Midiot/Plays/`.
+
+Export is spread over the modules that own each format: `ScoreImport.MIDIFileWriter` and `MusicXMLWriter` (grand staff and lead sheet) for CO-6, and `Notation.ScorePDF` for CO-7. `ScorePDF` draws the same engraved shapes the screen shows into PDF pages, one line of music at a time, so lines are never cut across sheets.
 
 ### DesignSystem
 

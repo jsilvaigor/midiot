@@ -5,6 +5,7 @@ import Library
 import MidiIO
 import MusicCore
 import Observation
+import Sketch
 import Sound
 import Practice
 import SwiftUI
@@ -21,7 +22,14 @@ final class AppModel {
     }
 
     let devices = DeviceManager()
-    var section = AppSection.today
+    var section = AppSection.today {
+        didSet {
+            guard (oldValue == .sketchpad) != (section == .sketchpad) else { return }
+            sketchpad.setActive(section == .sketchpad)
+        }
+    }
+    /// Plays, cues and takes (milestone 3).
+    @ObservationIgnored let sketchpad: SketchpadModel
     /// Minutes practiced per day and what was played through (requirement CU-6).
     private(set) var log = PracticeLog()
     /// Best whole-run accuracy per drill id.
@@ -50,6 +58,12 @@ final class AppModel {
     @ObservationIgnored private let audio = AudioEngine()
     @ObservationIgnored private let piano = SamplerInstrument()
     @ObservationIgnored private let clicks = SamplerInstrument()
+    /// Strings, pads and the other sounds of the Sketchpad (requirement SN-2).
+    @ObservationIgnored private let palette = PaletteSynth()
+    /// Everything played, kept for ten minutes (requirement CO-1).
+    @ObservationIgnored private let capture = CaptureBuffer()
+    /// What the keyboard plays: the piano, or the Sketchpad's chosen sound.
+    @ObservationIgnored private let keyboard: LiveSound
     @ObservationIgnored private let store: SongStore
     /// The open song's player, reachable from the MIDI thread so key presses are judged
     /// with their exact time.
@@ -75,6 +89,11 @@ final class AppModel {
     init(store: SongStore = .standard, seedsStarterSongs: Bool = true) {
         self.store = store
         self.seedsStarterSongs = seedsStarterSongs
+        keyboard = LiveSound(piano)
+        sketchpad = SketchpadModel(
+            store: PlayStore(root: store.root.deletingLastPathComponent().appendingPathComponent("Plays", isDirectory: true)),
+            capture: capture, piano: piano, palette: palette, clicks: clicks, keyboard: keyboard
+        )
     }
     @ObservationIgnored private var isStarted = false
 
@@ -87,8 +106,10 @@ final class AppModel {
         refreshDrillBest()
         trackPracticeTime()
         seedStarterSongsIfNeeded()
+        sketchpad.load()
         audio.attach(piano)
         audio.attach(clicks)
+        audio.attach(palette)
         do {
             try audio.start()
             latency = audio.latency
@@ -100,10 +121,12 @@ final class AppModel {
 
         // Large SoundFonts take seconds to load; keep the window responsive meanwhile.
         let bank = SoundBank.piano()
-        Task.detached(priority: .userInitiated) { [piano, clicks] in
+        let paletteBank = SoundBank.palette()
+        Task.detached(priority: .userInitiated) { [piano, clicks, palette] in
             let status: SoundStatus
             // The metronome uses the drum kit built into macOS; without it the app still works.
             try? clicks.load(.system, percussion: true)
+            try? palette.load(paletteBank)
             do {
                 try piano.load(bank)
                 status = .ready(bank)
@@ -113,14 +136,21 @@ final class AppModel {
             await MainActor.run { self.soundStatus = status }
         }
 
-        devices.start { [piano, activePlayer, weak self] event in
-            // On the MIDI thread: make sound first, then tell the interface.
+        devices.start { [keyboard, capture, activePlayer, weak self] event in
+            // On the MIDI thread: make sound first, then remember it, then tell the interface.
+            let instrument = keyboard.current
+            let time = event.seconds ?? SongPlayer.now
             switch event.kind {
             case let .noteOn(pitch, velocity):
-                piano.noteOn(pitch, velocity: velocity)
+                instrument.noteOn(pitch, velocity: velocity)
                 activePlayer.pressed(pitch, at: event.seconds)
-            case let .noteOff(pitch): piano.noteOff(pitch)
-            case let .sustain(isDown): piano.setSustain(isDown)
+                capture.record(.noteOn(pitch: pitch.midiNumber, velocity: velocity), at: time)
+            case let .noteOff(pitch):
+                instrument.noteOff(pitch)
+                capture.record(.noteOff(pitch: pitch.midiNumber), at: time)
+            case let .sustain(isDown):
+                instrument.setSustain(isDown)
+                capture.record(.sustain(isDown: isDown), at: time)
             }
             Task { @MainActor in self?.show(event) }
         }
@@ -129,7 +159,10 @@ final class AppModel {
     /// Call when the set of connected keyboards changes.
     func devicesChanged() {
         // A key held on a keyboard that was just unplugged would otherwise sound forever.
-        piano.allNotesOff()
+        keyboard.current.allNotesOff()
+        // Close any note the capture still thinks is held.
+        for pitch in pressed { capture.record(.noteOff(pitch: pitch.midiNumber), at: SongPlayer.now) }
+        capture.record(.sustain(isDown: false), at: SongPlayer.now)
         pressed.removeAll()
         pedalIsDown = false
         range = devices.devices.mainInstrument?.profile.range ?? .fortyNineKeys
@@ -141,6 +174,7 @@ final class AppModel {
     /// they hear, so that delay is taken off their press times before judging (requirement SN-4).
     private func updatePressCompensation() {
         activePlayer.pressCompensation = (latency?.total ?? 0) + timingAdjustment / 1000
+        sketchpad.pressCompensation = activePlayer.pressCompensation
     }
 
     private func seedStarterSongsIfNeeded() {
@@ -334,13 +368,16 @@ final class AppModel {
     // MARK: Playing
 
     func mouseDown(on pitch: Pitch) {
-        piano.noteOn(pitch, velocity: 90)
+        keyboard.current.noteOn(pitch, velocity: 90)
+        capture.record(.noteOn(pitch: pitch.midiNumber, velocity: 90), at: SongPlayer.now)
         pressed.insert(pitch)
         activePlayer.pressed(pitch, at: nil)
+        sketchpad.heard(pressed)
     }
 
     func mouseUp(on pitch: Pitch) {
-        piano.noteOff(pitch)
+        keyboard.current.noteOff(pitch)
+        capture.record(.noteOff(pitch: pitch.midiNumber), at: SongPlayer.now)
         pressed.remove(pitch)
         session?.released(pitch)
     }
@@ -349,6 +386,7 @@ final class AppModel {
         switch event.kind {
         case let .noteOn(pitch, _):
             pressed.insert(pitch)
+            sketchpad.heard(pressed)
             // Follow the keyboard's octave buttons.
             range = range.shifted(toContain: pitch)
         case let .noteOff(pitch):

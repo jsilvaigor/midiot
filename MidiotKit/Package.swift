@@ -11,6 +11,7 @@ let modules: [(name: String, dependencies: [Target.Dependency])] = [
     ("Practice", ["MusicCore"]),
     ("Library", ["MusicCore", "ScoreImport", "Notation"]),
     ("DesignSystem", ["MusicCore"]),
+    ("Sketch", ["MusicCore"]),
 ]
 
 let package = Package(
@@ -38,7 +39,8 @@ let package = Package(
         .testTarget(name: "ScoreImportTests", dependencies: ["ScoreImport"]),
         .testTarget(name: "LibraryTests", dependencies: ["Library", "Practice"], resources: [.copy("Fixtures")]),
         .testTarget(name: "PracticeTests", dependencies: ["Practice"]),
-        .testTarget(name: "NotationTests", dependencies: ["Notation"], resources: [.copy("Fixtures")]),
+        .testTarget(name: "SketchTests", dependencies: ["Sketch"]),
+        .testTarget(name: "NotationTests", dependencies: ["Notation", "ScoreImport"], resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]
 )

@@ -28,6 +28,11 @@ public final class AudioEngine: @unchecked Sendable {
         engine.connect(instrument.node, to: engine.mainMixerNode, format: nil)
     }
 
+    public func attach(_ synth: PaletteSynth) {
+        engine.attach(synth.node)
+        engine.connect(synth.node, to: engine.mainMixerNode, format: nil)
+    }
+
     public func start() throws {
         applyBufferSize()
         try engine.start()

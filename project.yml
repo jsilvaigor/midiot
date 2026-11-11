@@ -37,6 +37,7 @@ targets:
       - { package: MidiotKit, product: Practice }
       - { package: MidiotKit, product: Library }
       - { package: MidiotKit, product: DesignSystem }
+      - { package: MidiotKit, product: Sketch }
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.midiot.Midiot

@@ -2,16 +2,20 @@ import AppKit
 import DesignSystem
 import Library
 import MusicCore
+import Sketch
 import SwiftUI
 
 /// Development aid: renders the app's screens to PNG files and quits, so their look can be
 /// reviewed without operating the app.
 ///
-///     Midiot -snapshot <output folder> [-snapshotSong <file> ...] [-snapshotBeat <beat>]
+///     Midiot -snapshot <output folder> [-snapshotSong <file> ...] [-snapshotBeat <beat>] [-snapshotLanguage pt-BR]
 ///
 /// Songs are imported into a throwaway library inside the output folder, never the real one.
 @MainActor
 enum SnapshotMode {
+    /// Language the screens are rendered in; nil is the system's.
+    private static var language: String?
+
     static func runIfRequested() {
         let arguments = CommandLine.arguments
         guard let flag = arguments.firstIndex(of: "-snapshot"), arguments.indices.contains(flag + 1) else { return }
@@ -19,6 +23,7 @@ enum SnapshotMode {
         let songs = arguments.indices
             .filter { arguments[$0] == "-snapshotSong" && arguments.indices.contains($0 + 1) }
             .map { URL(fileURLWithPath: arguments[$0 + 1]) }
+        language = arguments.firstIndex(of: "-snapshotLanguage").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
         let beat = arguments.firstIndex(of: "-snapshotBeat").flatMap { Double(arguments[$0 + 1]) } ?? 0
 
         Task { @MainActor in
@@ -30,6 +35,7 @@ enum SnapshotMode {
     private static func run(folder: URL, songs: [URL], beat: Double) async {
         let storeRoot = folder.appendingPathComponent("library")
         try? FileManager.default.removeItem(at: storeRoot)
+        try? FileManager.default.removeItem(at: folder.appendingPathComponent("Plays"))
         let model = AppModel(store: SongStore(root: storeRoot), seedsStarterSongs: false)
         model.start()
 
@@ -121,8 +127,87 @@ enum SnapshotMode {
         UserDefaults.standard.removeObject(forKey: "practiceViewMode")
         model.closeSong()
         save(RootView(), model: model, to: folder.appendingPathComponent("today.png"))
+        await sketchpad(model: model, folder: folder)
+
         model.section = .settings
         save(RootView(), model: model, to: folder.appendingPathComponent("settings.png"))
+    }
+
+    /// Builds a play, plays two takes and an overdub with the mouse, and writes every export.
+    private static func sketchpad(model: AppModel, folder: URL) async {
+        // The Sketchpad remembers its sound, tempo and play; put the user's back afterwards.
+        let keys = ["sketchTempo", "sketchProgram", "sketchPlay"]
+        let saved = keys.map { UserDefaults.standard.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { UserDefaults.standard.set(value, forKey: key) } }
+
+        let sketch = model.sketchpad
+        model.section = .sketchpad
+        save(RootView(), model: model, to: folder.appendingPathComponent("sketchpad-empty.png"))
+
+        sketch.newPlay(title: "A Midsummer Night’s Dream", sceneTitle: "Act I · Athens", cueName: "Overture")
+        sketch.updateCue { $0.status = .ready }
+        if let scene = sketch.play?.scenes.first { sketch.addCue(to: scene.id, name: "Theseus enters") }
+        sketch.addScene(title: "Act III · Forest at night")
+        if let scene = sketch.play?.scenes.last {
+            sketch.addCue(to: scene.id, name: "Lost lovers")
+            sketch.addCue(to: scene.id, name: "Forest at night")
+        }
+        sketch.updatePlay { $0.opensOn = Date(timeIntervalSince1970: 1_805_000_000) }
+        save(RootView(), model: model, to: folder.appendingPathComponent("sketchpad-no-takes.png"))
+        sketch.updateCue {
+            $0.note = "Under Puck’s line “Up and down, up and down.” Fade on Lysander’s exit."
+            $0.targetSeconds = 45
+            $0.status = .draft
+            $0.mood = .mystery
+        }
+        sketch.bpm = 60
+        sketch.sound = .sound(program: 88)
+
+        func play(_ numbers: [Int], milliseconds: Int) async {
+            for number in numbers { model.mouseDown(on: Pitch(midiNumber: number)) }
+            try? await Task.sleep(for: .milliseconds(milliseconds))
+            for number in numbers { model.mouseUp(on: Pitch(midiNumber: number)) }
+        }
+        func phrase(_ melody: [Int]) async {
+            for (index, note) in melody.enumerated() {
+                // A low note under every fourth melody note.
+                await play(index % 4 == 0 ? [note, [50, 45, 43, 50][index / 4 % 4]] : [note], milliseconds: 240)
+                try? await Task.sleep(for: .milliseconds(10))
+            }
+        }
+
+        await phrase([62, 65, 69, 72, 76, 72, 69, 65, 67, 71, 74, 77, 74, 72, 69, 65])
+        sketch.keepLast(seconds: 30)
+        try? await Task.sleep(for: .milliseconds(300))
+        await phrase([69, 72, 76, 79, 76, 72, 69, 64, 62, 65, 69, 72, 76, 74, 72, 69])
+        // Hold a chord so the app has something to name.
+        for number in [50, 65, 69, 72, 76] { model.mouseDown(on: Pitch(midiNumber: number)) }
+        try? await Task.sleep(for: .milliseconds(700))
+        sketch.keepLast(seconds: 8)
+        if let id = sketch.selectedTakeID { sketch.toggleKeeper(id) }
+
+        // A second layer of slow strings over the keeper.
+        sketch.sound = .sound(program: 48)
+        sketch.overdub()
+        try? await Task.sleep(for: .milliseconds(4100))
+        save(RootView(), model: model, to: folder.appendingPathComponent("sketchpad-overdub.png"))
+        for number in [38, 45, 43, 38] {
+            guard sketch.isOverdubbing else { break }
+            await play([number, number + 12], milliseconds: 900)
+        }
+        sketch.stop()
+        sketch.quantize()
+        sketch.selectedNotes = [NoteRef(layer: 0, index: 4), NoteRef(layer: 0, index: 5), NoteRef(layer: 0, index: 6)]
+        save(RootView(), model: model, to: folder.appendingPathComponent("sketchpad.png"))
+
+        for (format, name) in [
+            (SketchpadModel.ExportFormat.midi, "cue.mid"), (.musicXML, "cue.musicxml"),
+            (.pdfGrandStaff, "cue-grand-staff.pdf"), (.pdfLeadSheet, "cue-lead-sheet.pdf"),
+        ] {
+            let data = sketch.export(format, layerName: { "Layer \($0)" }, subtitle: "A Midsummer Night’s Dream · Cue 2B · Take 2")
+            try? data?.write(to: folder.appendingPathComponent(name))
+        }
+        for number in [50, 65, 69, 72, 76] { model.mouseUp(on: Pitch(midiNumber: number)) }
     }
 
     private static func waitUntil(_ condition: () -> Bool) async {
@@ -135,6 +220,7 @@ enum SnapshotMode {
         let size = CGSize(width: 1280, height: 800)
         let root = view
             .environment(model)
+            .environment(\.locale, language.map(Locale.init(identifier:)) ?? .autoupdatingCurrent)
             .preferredColorScheme(.dark)
             .tint(Palette.accent)
             .font(.bodyText)
