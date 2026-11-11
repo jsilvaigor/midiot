@@ -5,20 +5,16 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.locale) private var locale
-    @State private var section: AppSection = .library
 
     var body: some View {
+        @Bindable var model = model
         NavigationSplitView {
-            SidebarView(selection: $section, devices: deviceStatuses)
+            SidebarView(selection: $model.section, devices: deviceStatuses)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
-            switch section {
+            switch model.section {
             case .library:
-                EmptyState(
-                    systemImage: "music.note.list",
-                    title: "No songs yet",
-                    message: "Songs you import will appear here."
-                )
+                LibraryView()
             case .practice:
                 PracticeView()
             case .settings:

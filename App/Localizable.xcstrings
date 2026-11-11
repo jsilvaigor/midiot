@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld bars": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld compassos"
+          }
+        }
+      }
+    },
     "%lld keys": {
       "localizations": {
         "pt-BR": {
@@ -17,6 +27,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld ms"
+          }
+        }
+      }
+    },
+    "%lld notes": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld notas"
+          }
+        }
+      }
+    },
+    "49 keys": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "49 teclas"
+          }
+        }
+      }
+    },
+    "Added": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionada"
+          }
+        }
+      }
+    },
+    "Back to Library": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltar à Biblioteca"
+          }
+        }
+      }
+    },
+    "Bar · Beat": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compasso · Tempo"
           }
         }
       }
@@ -41,12 +101,92 @@
         }
       }
     },
+    "Count-in": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contagem"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluir"
+          }
+        }
+      }
+    },
+    "Dismiss": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispensar"
+          }
+        }
+      }
+    },
+    "Drop a score here": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solte uma partitura aqui"
+          }
+        }
+      }
+    },
+    "Fits 25": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cabe em 25"
+          }
+        }
+      }
+    },
+    "Format": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formato"
+          }
+        }
+      }
+    },
+    "Import": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar"
+          }
+        }
+      }
+    },
     "Keyboards": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Teclados"
+          }
+        }
+      }
+    },
+    "Keys": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teclas"
           }
         }
       }
@@ -71,6 +211,16 @@
         }
       }
     },
+    "Length": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duração"
+          }
+        }
+      }
+    },
     "Library": {
       "localizations": {
         "pt-BR": {
@@ -87,6 +237,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando…"
+          }
+        }
+      }
+    },
+    "MIDI (.mid) or MusicXML (.musicxml, .mxl).": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIDI (.mid) ou MusicXML (.musicxml, .mxl)."
+          }
+        }
+      }
+    },
+    "Metronome": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metrônomo"
           }
         }
       }
@@ -151,6 +321,16 @@
         }
       }
     },
+    "Pause": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar"
+          }
+        }
+      }
+    },
     "Piano": {
       "localizations": {
         "pt-BR": {
@@ -161,12 +341,42 @@
         }
       }
     },
+    "Piece": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peça"
+          }
+        }
+      }
+    },
+    "Play": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocar"
+          }
+        }
+      }
+    },
     "Practice": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Praticar"
+          }
+        }
+      }
+    },
+    "Restart": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recomeçar"
           }
         }
       }
@@ -211,12 +421,42 @@
         }
       }
     },
+    "Tempo": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andamento"
+          }
+        }
+      }
+    },
     "This output adds noticeable delay. Use wired headphones or speakers for practice.": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Esta saída adiciona um atraso perceptível. Use fones com fio ou alto-falantes para praticar."
+          }
+        }
+      }
+    },
+    "Wider than 49": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mais de 49"
+          }
+        }
+      }
+    },
+    "Your imports stay on this Mac.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suas importações ficam neste Mac."
           }
         }
       }

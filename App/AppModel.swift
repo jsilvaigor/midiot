@@ -1,4 +1,6 @@
 import DesignSystem
+import Foundation
+import Library
 import MidiIO
 import MusicCore
 import Observation
@@ -16,6 +18,13 @@ final class AppModel {
     }
 
     let devices = DeviceManager()
+    var section = AppSection.library
+    /// Songs in the library, newest first.
+    private(set) var songs: [SongEntry] = []
+    /// The song open on the Practice screen.
+    private(set) var session: PracticeSession?
+    /// Why the last import or open failed; shown until dismissed.
+    var libraryError: String?
     private(set) var soundStatus = SoundStatus.loading
     private(set) var latency: AudioEngine.Latency?
     /// Keys currently held, on any keyboard or with the mouse.
@@ -25,13 +34,21 @@ final class AppModel {
 
     @ObservationIgnored private let audio = AudioEngine()
     @ObservationIgnored private let piano = SamplerInstrument()
+    @ObservationIgnored private let clicks = SamplerInstrument()
+    @ObservationIgnored private let store: SongStore
+
+    init(store: SongStore = .standard) {
+        self.store = store
+    }
     @ObservationIgnored private var isStarted = false
 
     func start() {
         guard !isStarted else { return }
         isStarted = true
 
+        songs = store.entries()
         audio.attach(piano)
+        audio.attach(clicks)
         do {
             try audio.start()
             latency = audio.latency
@@ -42,8 +59,10 @@ final class AppModel {
 
         // Large SoundFonts take seconds to load; keep the window responsive meanwhile.
         let bank = SoundBank.piano()
-        Task.detached(priority: .userInitiated) { [piano] in
+        Task.detached(priority: .userInitiated) { [piano, clicks] in
             let status: SoundStatus
+            // The metronome uses the drum kit built into macOS; without it the app still works.
+            try? clicks.load(.system, percussion: true)
             do {
                 try piano.load(bank)
                 status = .ready(bank)
@@ -72,6 +91,62 @@ final class AppModel {
         range = devices.devices.mainInstrument?.profile.range ?? .fortyNineKeys
         latency = audio.latency
     }
+
+    // MARK: Library
+
+    /// Copies files into the library. Failures are collected into `libraryError`.
+    func importSongs(from urls: [URL]) {
+        let store = store
+        Task {
+            let failures = await Task.detached(priority: .userInitiated) {
+                urls.compactMap { url -> String? in
+                    let scoped = url.startAccessingSecurityScopedResource()
+                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                    do {
+                        try store.importFile(at: url)
+                        return nil
+                    } catch let SongStore.StoreError.unreadable(reason) {
+                        return "\(url.lastPathComponent): \(reason)"
+                    } catch SongStore.StoreError.unsupportedFile {
+                        return "\(url.lastPathComponent): only MIDI and MusicXML files can be imported."
+                    } catch {
+                        return "\(url.lastPathComponent): \(error.localizedDescription)"
+                    }
+                }
+            }.value
+            songs = store.entries()
+            libraryError = failures.isEmpty ? nil : failures.joined(separator: "\n")
+        }
+    }
+
+    func delete(_ entry: SongEntry) {
+        if session?.loaded.entry.id == entry.id { closeSong() }
+        try? store.delete(entry)
+        songs = store.entries()
+    }
+
+    /// Opens a song on the Practice screen.
+    func open(_ entry: SongEntry) {
+        let store = store
+        Task {
+            do {
+                let loaded = try await Task.detached(priority: .userInitiated) { try store.load(entry) }.value
+                session?.stop()
+                session = PracticeSession(loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks)
+                section = .practice
+            } catch {
+                libraryError = "\(entry.title): \(error.localizedDescription)"
+            }
+        }
+    }
+
+    func closeSong() {
+        session?.stop()
+        session = nil
+        section = .library
+    }
+
+    // MARK: Playing
 
     func mouseDown(on pitch: Pitch) {
         piano.noteOn(pitch, velocity: 90)

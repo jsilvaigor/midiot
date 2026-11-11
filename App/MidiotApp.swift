@@ -8,6 +8,7 @@ struct MidiotApp: App {
 
     init() {
         Typography.registerFonts()
+        SnapshotMode.runIfRequested()
     }
 
     var body: some Scene {
