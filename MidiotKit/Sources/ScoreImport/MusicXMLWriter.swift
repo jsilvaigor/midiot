@@ -7,7 +7,12 @@ public enum MusicXMLWriter {
     /// Sixteenth notes per beat: the rhythmic grid of the draft.
     private static let grid = 4
 
-    public static func draft(from song: Song) -> String {
+    /// - Parameters:
+    ///   - fifths: key signature, sharps positive and flats negative. Notes are spelled to suit it.
+    ///   - sharpened: a pitch class always written as a sharp, for the raised seventh of a
+    ///     minor key (C♯ in D minor, even though the key signature has a flat).
+    public static func draft(from song: Song, fifths: Int = 0, sharpened: Int? = nil) -> String {
+        let spelling = Spelling(fifths: fifths, sharpened: sharpened)
         var xml = """
         <?xml version="1.0" encoding="UTF-8"?>
         <score-partwise version="4.0"><work><work-title>\(escape(song.title))</work-title></work>
@@ -26,7 +31,7 @@ public enum MusicXMLWriter {
 
             if measure.number == song.measures.first?.number || length != previousLength {
                 xml += "<attributes>"
-                if measure.number == song.measures.first?.number { xml += "<divisions>\(grid)</divisions><key><fifths>0</fifths></key>" }
+                if measure.number == song.measures.first?.number { xml += "<divisions>\(grid)</divisions><key><fifths>\(fifths)</fifths></key>" }
                 let (beats, unit) = timeSignature(forSixteenths: length)
                 xml += "<time><beats>\(beats)</beats><beat-type>\(unit)</beat-type></time>"
                 if measure.number == song.measures.first?.number {
@@ -46,7 +51,7 @@ public enum MusicXMLWriter {
                 if index > 0 { xml += "<backup><duration>\(length)</duration></backup>" }
                 xml += staff(
                     hand: hand, number: index + 1, song: song, start: start, length: length,
-                    carried: &carried[hand]
+                    spelling: spelling, carried: &carried[hand]
                 )
             }
             xml += "</measure>\n"
@@ -56,9 +61,11 @@ public enum MusicXMLWriter {
 
     /// One hand's notes for one bar.
     private static func staff(
-        hand: Hand, number: Int, song: Song, start: Int, length: Int,
+        hand: Hand, number: Int, song: Song, start: Int, length: Int, spelling: Spelling,
         carried: inout (pitches: [Pitch], remaining: Int)?
     ) -> String {
+        // Finger numbers by position and pitch, for the notes that have them.
+        var fingers: [Int: [Pitch: Int]] = [:]
         // Chords by position within the bar, in sixteenths.
         var chords: [Int: (pitches: Set<Pitch>, duration: Int, tiedFromPrevious: Bool)] = [:]
         if let held = carried, held.remaining > 0 {
@@ -69,6 +76,7 @@ public enum MusicXMLWriter {
             let position = quantize(note.start) - start
             guard position >= 0, position < length else { continue }
             let duration = max(quantize(note.duration), 1)
+            if let finger = note.finger { fingers[position, default: [:]][note.pitch] = finger }
             if var chord = chords[position] {
                 guard !chord.tiedFromPrevious else { continue } // a new note cannot join a held chord
                 chord.pitches.insert(note.pitch)
@@ -100,7 +108,10 @@ public enum MusicXMLWriter {
                 let tieStop = pieceIndex > 0 || chord.tiedFromPrevious
                 let tieStart = pieceIndex + 1 < pieces.count || overflow > 0
                 for (pitchIndex, pitch) in pitches.enumerated() {
-                    xml += note(pitch, piece, staff: number, inChord: pitchIndex > 0, tieStop: tieStop, tieStart: tieStart)
+                    xml += note(
+                        pitch, piece, staff: number, inChord: pitchIndex > 0, tieStop: tieStop, tieStart: tieStart,
+                        spelling: spelling, finger: pieceIndex == 0 && !chord.tiedFromPrevious ? fingers[position]?[pitch] : nil
+                    )
                 }
             }
             cursor = position + sounding
@@ -109,22 +120,53 @@ public enum MusicXMLWriter {
         return xml
     }
 
-    private static func note(_ pitch: Pitch, _ sixteenths: Int, staff: Int, inChord: Bool, tieStop: Bool, tieStart: Bool) -> String {
-        let steps: [(String, Int)] = [("C", 0), ("C", 1), ("D", 0), ("D", 1), ("E", 0), ("F", 0),
-                                      ("F", 1), ("G", 0), ("G", 1), ("A", 0), ("A", 1), ("B", 0)]
-        let (step, alter) = steps[pitch.pitchClass]
+    private static func note(
+        _ pitch: Pitch, _ sixteenths: Int, staff: Int, inChord: Bool, tieStop: Bool, tieStart: Bool,
+        spelling: Spelling, finger: Int?
+    ) -> String {
+        let (step, alter, accidental) = spelling.spell(pitch)
         var xml = "<note>" + (inChord ? "<chord/>" : "")
-        xml += "<pitch><step>\(step)</step>" + (alter != 0 ? "<alter>\(alter)</alter>" : "") + "<octave>\(pitch.octave)</octave></pitch>"
+        // The octave number belongs to the letter: C♭4 is the B below middle C's octave.
+        let octave = pitch.octave + (step == "B" && alter == 1 ? -1 : 0) + (step == "C" && alter == -1 ? 1 : 0)
+        xml += "<pitch><step>\(step)</step>" + (alter != 0 ? "<alter>\(alter)</alter>" : "") + "<octave>\(octave)</octave></pitch>"
         xml += "<duration>\(sixteenths)</duration>"
         if tieStop { xml += "<tie type=\"stop\"/>" }
         if tieStart { xml += "<tie type=\"start\"/>" }
         xml += "<voice>\(staff)</voice>" + noteType(sixteenths)
-        if alter != 0 { xml += "<accidental>sharp</accidental>" }
+        if let accidental, !tieStop { xml += "<accidental>\(accidental)</accidental>" }
         xml += "<staff>\(staff)</staff>"
-        if tieStop || tieStart {
-            xml += "<notations>" + (tieStop ? "<tied type=\"stop\"/>" : "") + (tieStart ? "<tied type=\"start\"/>" : "") + "</notations>"
+        if tieStop || tieStart || finger != nil {
+            xml += "<notations>" + (tieStop ? "<tied type=\"stop\"/>" : "") + (tieStart ? "<tied type=\"start\"/>" : "")
+            if let finger { xml += "<technical><fingering>\(finger)</fingering></technical>" }
+            xml += "</notations>"
         }
         return xml + "</note>"
+    }
+
+    /// Chooses letter names for pitches in a key and says when an accidental must be printed.
+    struct Spelling {
+        let fifths: Int
+        let sharpened: Int?
+
+        /// Alteration the key signature gives each letter.
+        private var signature: [String: Int] {
+            let sharps = ["F", "C", "G", "D", "A", "E", "B"]
+            var result: [String: Int] = [:]
+            if fifths > 0 { for letter in sharps.prefix(fifths) { result[letter] = 1 } }
+            if fifths < 0 { for letter in sharps.reversed().prefix(-fifths) { result[letter] = -1 } }
+            return result
+        }
+
+        func spell(_ pitch: Pitch) -> (step: String, alter: Int, accidental: String?) {
+            let sharp: [(String, Int)] = [("C", 0), ("C", 1), ("D", 0), ("D", 1), ("E", 0), ("F", 0),
+                                          ("F", 1), ("G", 0), ("G", 1), ("A", 0), ("A", 1), ("B", 0)]
+            let flat: [(String, Int)] = [("C", 0), ("D", -1), ("D", 0), ("E", -1), ("E", 0), ("F", 0),
+                                         ("G", -1), ("G", 0), ("A", -1), ("A", 0), ("B", -1), ("B", 0)]
+            let useSharp = fifths >= 0 || pitch.pitchClass == sharpened
+            let (step, alter) = (useSharp ? sharp : flat)[pitch.pitchClass]
+            guard alter != (signature[step] ?? 0) else { return (step, alter, nil) }
+            return (step, alter, alter > 0 ? "sharp" : (alter < 0 ? "flat" : "natural"))
+        }
     }
 
     private static func rests(_ sixteenths: Int, staff: Int) -> String {
