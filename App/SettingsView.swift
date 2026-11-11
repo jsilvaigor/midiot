@@ -1,4 +1,5 @@
 import DesignSystem
+import MidiIO
 import MusicCore
 import SwiftUI
 
@@ -45,6 +46,21 @@ struct SettingsView: View {
                 }
             }
 
+            Section {
+                ForEach(ControlAction.Context.allCases, id: \.self) { context in
+                    Text(ControlNames.context(context)).capsLabel().padding(.top, 6)
+                    ForEach(ControlAction.allCases.filter { $0.context == context }, id: \.self) { action in
+                        controlRow(action)
+                    }
+                }
+                Button("Reset to the Launchkey defaults") { model.resetControlMap() }
+            } header: {
+                Text("Pads and knobs")
+            } footer: {
+                Text("Press Learn, then hit the pad or turn the knob to use. The same pad can do one thing while practicing and another on stage.")
+                    .font(.sans(12)).foregroundStyle(Palette.textSecondary)
+            }
+
             Section("Sound") {
                 LabeledContent("Piano") { soundStatus }
                 if let latency = model.latency {
@@ -74,6 +90,30 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(FilamentBackground())
         .navigationTitle(Text("Settings"))
+        .onDisappear { model.learning = nil }
+    }
+
+    private func controlRow(_ action: ControlAction) -> some View {
+        let isLearning = model.learning == action
+        return LabeledContent {
+            HStack(spacing: 12) {
+                if isLearning {
+                    Text(action.isContinuous ? "Turn a knob…" : "Hit a pad…").foregroundStyle(Palette.accent)
+                } else if let source = model.controlMap.source(of: action) {
+                    ControlNames.source(source).font(.readoutSmall)
+                } else {
+                    Text("Not set").foregroundStyle(Palette.textTertiary)
+                }
+                Button(isLearning ? "Cancel" : "Learn (control)") { model.learning = isLearning ? nil : action }
+                    .frame(minWidth: 64)
+                Button { model.clearControl(action) } label: { Image(systemName: "xmark") }
+                    .disabled(isLearning || model.controlMap.source(of: action) == nil)
+                    .help(Text("Remove"))
+                    .accessibilityLabel(Text("Remove"))
+            }
+        } label: {
+            Text(ControlNames.action(action))
+        }
     }
 
     @ViewBuilder private var soundStatus: some View {

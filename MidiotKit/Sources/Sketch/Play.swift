@@ -16,10 +16,14 @@ public struct Cue: Codable, Hashable, Sendable, Identifiable {
     public var mood: MoodPalette.Mood?
     /// Oldest first.
     public var takes: [Take]
+    /// What stepping to the cue on stage recalls; nil until it is set, which means the
+    /// sound of the take and its own tempo (requirement LV-1).
+    public var stage: StagePreset?
 
     public init(
         id: UUID = UUID(), name: String, note: String = "", targetSeconds: Double? = nil,
-        status: Status = .sketch, mood: MoodPalette.Mood? = nil, takes: [Take] = []
+        status: Status = .sketch, mood: MoodPalette.Mood? = nil, takes: [Take] = [],
+        stage: StagePreset? = nil
     ) {
         self.id = id
         self.name = name
@@ -28,6 +32,18 @@ public struct Cue: Codable, Hashable, Sendable, Identifiable {
         self.status = status
         self.mood = mood
         self.takes = takes
+        self.stage = stage
+    }
+
+    /// The preset in force: the one set for the stage, else the sound the take was played with.
+    public var stagePreset: StagePreset {
+        stage ?? StagePreset(program: bestTake?.layers.first?.program)
+    }
+
+    /// Changes a take in place. Does nothing if the cue has no such take.
+    public mutating func updateTake(_ id: UUID, _ change: (inout Take) -> Void) {
+        guard let index = takes.firstIndex(where: { $0.id == id }) else { return }
+        change(&takes[index])
     }
 
     /// The take to export or perform: the keeper, else the newest.

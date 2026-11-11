@@ -26,11 +26,23 @@ public struct Layer: Codable, Hashable, Sendable, Identifiable {
     public var notes: [SketchNote]
     /// General MIDI program the layer was played with; nil is the grand piano.
     public var program: Int?
+    /// Left out when the take is played, on the stage and in the song made from it.
+    public var isMuted: Bool
 
-    public init(id: UUID = UUID(), notes: [SketchNote], program: Int? = nil) {
+    public init(id: UUID = UUID(), notes: [SketchNote], program: Int? = nil, isMuted: Bool = false) {
         self.id = id
         self.notes = notes
         self.program = program
+        self.isMuted = isMuted
+    }
+
+    // Written out so plays saved before layers could be muted still load.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        notes = try container.decode([SketchNote].self, forKey: .notes)
+        program = try container.decodeIfPresent(Int.self, forKey: .program)
+        isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
     }
 }
 
@@ -159,6 +171,23 @@ public extension Take {
         return copy
     }
 
+    /// Changes one layer. Does nothing if the take has no such layer.
+    func updatingLayer(_ id: UUID, _ change: (inout Layer) -> Void) -> Take {
+        guard let index = layers.firstIndex(where: { $0.id == id }) else { return self }
+        var copy = self
+        change(&copy.layers[index])
+        return copy
+    }
+
+    /// Removes one layer. Nil when it is the only layer: a take without layers is no take, so
+    /// the caller deletes the take instead.
+    func deletingLayer(_ id: UUID) -> Take? {
+        guard layers.count > 1 else { return nil }
+        var copy = self
+        copy.layers.removeAll { $0.id == id }
+        return copy
+    }
+
     private func mapNotes(_ transform: (SketchNote) -> SketchNote) -> Take {
         var copy = self
         for index in copy.layers.indices {
@@ -176,12 +205,13 @@ public extension Take {
 
     /// The take as a song the player and the score writers understand: 4/4 bars, notes below
     /// middle C in the left hand.
+    /// - Parameter includingMuted: also write the layers that are muted, as an export does.
     /// - Returns: the song, and for each of its notes the index of the layer it came from.
-    func song(title: String) -> (song: Song, layerOfNote: [Int]) {
+    func song(title: String, includingMuted: Bool = false) -> (song: Song, layerOfNote: [Int]) {
         var notes: [Note] = []
         // Layers of the notes at each (start, pitch), so each song note can be traced back.
         var origins: [[Double]: [Int]] = [:]
-        for (layerIndex, layer) in layers.enumerated() {
+        for (layerIndex, layer) in layers.enumerated() where includingMuted || !layer.isMuted {
             for note in layer.notes where note.duration > 0 {
                 notes.append(Note(
                     id: 0, pitch: Pitch(midiNumber: note.pitch), start: max(note.start, 0), duration: note.duration,

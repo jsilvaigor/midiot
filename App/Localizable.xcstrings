@@ -2,6 +2,16 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {},
+    "%@ + %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ + %@"
+          }
+        }
+      }
+    },
     "%@ major arpeggio" : {
       "localizations" : {
         "pt-BR" : {
@@ -62,6 +72,16 @@
         }
       }
     },
+    "%@ · %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
     "%@ · left hand" : {
       "localizations" : {
         "pt-BR" : {
@@ -108,6 +128,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld deixas"
+          }
+        }
+      }
+    },
+    "%lld cues · %lld with a recorded layer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld deixas · %lld com camada gravada"
           }
         }
       }
@@ -259,6 +289,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 camada"
+          }
+        }
+      }
+    },
+    "1 note" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 nota"
           }
         }
       }
@@ -453,6 +493,16 @@
         }
       }
     },
+    "As recorded" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como gravado"
+          }
+        }
+      }
+    },
     "At %@" : {
       "localizations" : {
         "pt-BR" : {
@@ -493,12 +543,32 @@
         }
       }
     },
+    "Back" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voltar"
+          }
+        }
+      }
+    },
     "Back to Library" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voltar à Biblioteca"
+          }
+        }
+      }
+    },
+    "Back to the start" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voltar ao início"
           }
         }
       }
@@ -713,6 +783,16 @@
         }
       }
     },
+    "Change play" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trocar de peça"
+          }
+        }
+      }
+    },
     "Choir" : {
       "localizations" : {
         "pt-BR" : {
@@ -743,12 +823,32 @@
         }
       }
     },
+    "Choose a second sound first" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha primeiro um segundo som"
+          }
+        }
+      }
+    },
     "Choose a song from the Library to start practicing." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Escolha uma música na Biblioteca para começar a praticar."
+          }
+        }
+      }
+    },
+    "Choose the play" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha a peça"
           }
         }
       }
@@ -913,12 +1013,32 @@
         }
       }
     },
+    "Controller %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlador %lld"
+          }
+        }
+      }
+    },
     "Count-in" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contagem"
+          }
+        }
+      }
+    },
+    "Count-in, on or off" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contagem, liga ou desliga"
           }
         }
       }
@@ -949,6 +1069,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nome da deixa"
+          }
+        }
+      }
+    },
+    "Cues" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deixas"
+          }
+        }
+      }
+    },
+    "Cues come from the Sketchpad. Make a play there, add its cues, and they line up here in order." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As deixas vêm dos Rascunhos. Crie uma peça lá, adicione as deixas, e elas aparecem aqui em ordem."
           }
         }
       }
@@ -1009,6 +1149,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apagar deixa"
+          }
+        }
+      }
+    },
+    "Delete layer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluir camada"
           }
         }
       }
@@ -1253,6 +1403,76 @@
         }
       }
     },
+    "Everywhere" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em qualquer tela"
+          }
+        }
+      }
+    },
+    "Exit stage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sair do palco"
+          }
+        }
+      }
+    },
+    "Fade in" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fade in"
+          }
+        }
+      }
+    },
+    "Fade out" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fade out"
+          }
+        }
+      }
+    },
+    "Fades out by itself from %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sai sozinha a partir de %@"
+          }
+        }
+      }
+    },
+    "Fading in" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrando"
+          }
+        }
+      }
+    },
+    "Fading out" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saindo"
+          }
+        }
+      }
+    },
     "Faster" : {
       "localizations" : {
         "pt-BR" : {
@@ -1433,6 +1653,16 @@
         }
       }
     },
+    "Go · %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vai · %@"
+          }
+        }
+      }
+    },
     "Goal reached" : {
       "localizations" : {
         "pt-BR" : {
@@ -1553,6 +1783,16 @@
         }
       }
     },
+    "Hit a pad…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque um pad…"
+          }
+        }
+      }
+    },
     "Hold three or more keys and the chord is named here." : {
       "localizations" : {
         "pt-BR" : {
@@ -1609,6 +1849,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "em %@ menor"
+          }
+        }
+      }
+    },
+    "Instrument" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instrumento"
           }
         }
       }
@@ -1673,6 +1923,16 @@
         }
       }
     },
+    "Knob %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Knob %lld"
+          }
+        }
+      }
+    },
     "Known" : {
       "localizations" : {
         "pt-BR" : {
@@ -1713,6 +1973,16 @@
         }
       }
     },
+    "Last cue" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última deixa"
+          }
+        }
+      }
+    },
     "Last played" : {
       "localizations" : {
         "pt-BR" : {
@@ -1743,6 +2013,26 @@
         }
       }
     },
+    "Layered" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em camadas"
+          }
+        }
+      }
+    },
+    "Layers" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camadas"
+          }
+        }
+      }
+    },
     "Lead sheet" : {
       "localizations" : {
         "pt-BR" : {
@@ -1769,6 +2059,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aprender"
+          }
+        }
+      }
+    },
+    "Learn (control)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atribuir"
           }
         }
       }
@@ -1839,6 +2145,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Carregando…"
+          }
+        }
+      }
+    },
+    "Locked · hold to unlock" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travado · segure para destravar"
           }
         }
       }
@@ -1993,6 +2309,16 @@
         }
       }
     },
+    "Make a play in the Sketchpad, add its cues, and you can choose it here." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crie uma peça nos Rascunhos, adicione as deixas e você poderá escolhê-la aqui."
+          }
+        }
+      }
+    },
     "Mark as keeper" : {
       "localizations" : {
         "pt-BR" : {
@@ -2019,6 +2345,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Metrônomo"
+          }
+        }
+      }
+    },
+    "Metronome, on or off" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metrônomo, liga ou desliga"
           }
         }
       }
@@ -2195,6 +2531,16 @@
       }
     },
     "MusicXML" : {},
+    "Mute layer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silenciar camada"
+          }
+        }
+      }
+    },
     "Mystery" : {
       "localizations" : {
         "pt-BR" : {
@@ -2295,6 +2641,32 @@
         }
       }
     },
+    "Next (cue)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A seguir"
+          }
+        }
+      }
+    },
+    "Next cue" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próxima deixa"
+          }
+        }
+      }
+    },
     "No cue selected" : {
       "localizations" : {
         "pt-BR" : {
@@ -2345,12 +2717,42 @@
         }
       }
     },
+    "No plays yet" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma peça ainda"
+          }
+        }
+      }
+    },
+    "No recorded layer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem camada gravada"
+          }
+        }
+      }
+    },
     "No takes yet" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nenhuma tomada ainda"
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum"
           }
         }
       }
@@ -2365,12 +2767,32 @@
         }
       }
     },
+    "Not set" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não definido"
+          }
+        }
+      }
+    },
     "Not the keeper" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Não é a escolhida"
+          }
+        }
+      }
+    },
+    "Note %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nota %lld"
           }
         }
       }
@@ -2415,6 +2837,16 @@
         }
       }
     },
+    "Nothing to perform yet" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada para apresentar ainda"
+          }
+        }
+      }
+    },
     "Nothing to practice yet" : {
       "localizations" : {
         "pt-BR" : {
@@ -2435,12 +2867,32 @@
         }
       }
     },
+    "Now" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agora"
+          }
+        }
+      }
+    },
     "Octatonic" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Octatônica"
+          }
+        }
+      }
+    },
+    "On stage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No palco"
           }
         }
       }
@@ -2491,6 +2943,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aberto e arejado; a terça dá lugar à segunda."
+          }
+        }
+      }
+    },
+    "Open the Sketchpad" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir os Rascunhos"
           }
         }
       }
@@ -2555,12 +3017,52 @@
         }
       }
     },
+    "Pad %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pad %lld"
+          }
+        }
+      }
+    },
     "Pads and atmospheres" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pads e atmosferas"
+          }
+        }
+      }
+    },
+    "Pads and knobs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pads e knobs"
+          }
+        }
+      }
+    },
+    "Panic" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pânico"
+          }
+        }
+      }
+    },
+    "Panic: silence all sound" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pânico: silenciar todo o som"
           }
         }
       }
@@ -2611,6 +3113,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Percussão e efeitos"
+          }
+        }
+      }
+    },
+    "Perform" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apresentar"
           }
         }
       }
@@ -2711,12 +3223,32 @@
         }
       }
     },
+    "Play layer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocar camada"
+          }
+        }
+      }
+    },
     "Play options" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opções da peça"
+          }
+        }
+      }
+    },
+    "Play or pause" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocar ou pausar"
           }
         }
       }
@@ -2741,6 +3273,16 @@
         }
       }
     },
+    "Plays to the end" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca até o fim"
+          }
+        }
+      }
+    },
     "Point at a chord to see its keys below. Click to hear it." : {
       "localizations" : {
         "pt-BR" : {
@@ -2757,6 +3299,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Praticar"
+          }
+        }
+      }
+    },
+    "Practice tempo" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andamento da prática"
+          }
+        }
+      }
+    },
+    "Press Learn, then hit the pad or turn the knob to use. The same pad can do one thing while practicing and another on stage." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clique em Atribuir e toque o pad ou gire o knob que quer usar. O mesmo pad pode fazer uma coisa ao praticar e outra no palco."
+          }
+        }
+      }
+    },
+    "Previous cue" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deixa anterior"
           }
         }
       }
@@ -2841,6 +3413,16 @@
         }
       }
     },
+    "Remove" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover"
+          }
+        }
+      }
+    },
     "Rename play" : {
       "localizations" : {
         "pt-BR" : {
@@ -2867,6 +3449,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Renomear…"
+          }
+        }
+      }
+    },
+    "Reset to the Launchkey defaults" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voltar ao padrão do Launchkey"
           }
         }
       }
@@ -3027,6 +3619,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beira-mar"
+          }
+        }
+      }
+    },
+    "Second sound" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segundo som"
           }
         }
       }
@@ -3201,12 +3803,48 @@
         }
       }
     },
+    "Split (keyboard)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Split"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Divisão"
+          }
+        }
+      }
+    },
+    "Split below %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dividir abaixo de %@"
+          }
+        }
+      }
+    },
     "Split hands" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dividir as mãos"
+          }
+        }
+      }
+    },
+    "Stage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palco"
           }
         }
       }
@@ -3611,6 +4249,16 @@
         }
       }
     },
+    "Turn a knob…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gire um knob…"
+          }
+        }
+      }
+    },
     "Undo" : {
       "localizations" : {
         "pt-BR" : {
@@ -3627,6 +4275,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inquieto; o acorde ii de um tom menor, que leva ao V."
+          }
+        }
+      }
+    },
+    "Unlock to leave the stage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destrave para sair do palco"
+          }
+        }
+      }
+    },
+    "Unlocked · click to lock" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destravado · clique para travar"
+          }
+        }
+      }
+    },
+    "Unmute layer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reativar som da camada"
           }
         }
       }
@@ -3691,6 +4369,16 @@
         }
       }
     },
+    "Volume" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume"
+          }
+        }
+      }
+    },
     "Wait mode" : {
       "localizations" : {
         "pt-BR" : {
@@ -3707,6 +4395,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "modo de espera"
+          }
+        }
+      }
+    },
+    "Wait mode, on or off" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de espera, liga ou desliga"
           }
         }
       }
@@ -3747,6 +4445,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O que acontece em cena e quando a música termina"
+          }
+        }
+      }
+    },
+    "While practicing" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ao praticar"
           }
         }
       }
@@ -3817,6 +4525,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Você toca tudo"
+          }
+        }
+      }
+    },
+    "you play live on top" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "você toca ao vivo por cima"
+          }
+        }
+      }
+    },
+    "You play this cue live." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você toca esta deixa ao vivo."
           }
         }
       }

@@ -1,6 +1,7 @@
 import AppKit
 import DesignSystem
 import Library
+import MidiIO
 import MusicCore
 import Practice
 import Sketch
@@ -39,6 +40,8 @@ enum SnapshotMode {
         try? FileManager.default.removeItem(at: folder.appendingPathComponent("Plays"))
         let model = AppModel(store: SongStore(root: storeRoot), seedsStarterSongs: false)
         model.start()
+        // Rendered in silence: the volume knob, turned all the way down.
+        model.handle(ControlEvent(source: .controller(number: DeviceProfile.launchkeyKnobControllers.upperBound), value: 0))
 
         save(RootView(), model: model, to: folder.appendingPathComponent("today-first.png"))
         model.section = .library
@@ -135,10 +138,96 @@ enum SnapshotMode {
         save(RootView(), model: model, to: folder.appendingPathComponent("today.png"))
         await sketchpad(model: model, folder: folder)
 
+        await stage(model: model, folder: folder)
+
         model.section = .chords
         save(RootView(), model: model, to: folder.appendingPathComponent("chords.png"))
         model.section = .settings
+        model.learning = .cueGo
         save(RootView(), model: model, to: folder.appendingPathComponent("settings.png"))
+        model.learning = nil
+    }
+
+    /// Performs the play the Sketchpad pass built: recalls a split sound, runs the recorded
+    /// layer from the pads with live playing on top, fades it, and lets a cue end by itself.
+    /// What happened is written to `stage-log.txt`.
+    private static func stage(model: AppModel, folder: URL) async {
+        let stage = model.stage
+        var log: [String] = []
+        func note(_ text: String) { log.append(text) }
+        func pad(_ number: Int) { model.handle(ControlEvent(source: .pad(note: DeviceProfile.launchkeyPadNotes[number - 1]), value: 100)) }
+        func shot(_ name: String) { save(RootView(), model: model, to: folder.appendingPathComponent("\(name).png")) }
+        defer { try? log.joined(separator: "\n").write(to: folder.appendingPathComponent("stage-log.txt"), atomically: true, encoding: .utf8) }
+
+        model.section = .stage
+        shot("stage-chooser")
+        // Choosing a play opens it on its first cue; go on to the one with the recorded take.
+        let recorded = model.sketchpad.selectedCueID
+        if let play = model.sketchpad.play { stage.choose(play.id) }
+        if let index = recorded.flatMap({ stage.sheet.index(of: $0) }) { stage.select(index) }
+        note("entered on cue \(stage.current?.label ?? "none") of \(stage.sheet.entries.count), locked \(stage.isLocked)")
+        shot("stage")
+
+        // Locked: presets cannot change.
+        stage.updatePreset { $0.program = 19 }
+        note("preset changed while locked: \(stage.current?.cue.stage != nil)")
+        stage.isLocked = false
+        stage.updatePreset {
+            $0.program = 89
+            $0.second = StagePreset.Second(program: 8, splitAt: 60)
+        }
+        shot("stage-unlocked")
+        stage.isLocked = true
+
+        // Pad 3 plays the layer; a chord is held live on top of it.
+        pad(3)
+        try? await Task.sleep(for: .milliseconds(1500))
+        for number in [55, 62, 69] { model.mouseDown(on: Pitch(midiNumber: number)) }
+        try? await Task.sleep(for: .milliseconds(700))
+        note("pad 3: playing \(stage.isPlaying), elapsed \(stage.elapsed), level \(stage.level)")
+        shot("stage-playing")
+
+        // Pad 5 fades it out; it stops by itself once silent.
+        pad(5)
+        try? await Task.sleep(for: .milliseconds(2000))
+        note("pad 5 after 2 s: level \(stage.level), direction \(stage.fadeDirection)")
+        shot("stage-fading")
+        // Pad 4 turns the fade round.
+        pad(4)
+        try? await Task.sleep(for: .milliseconds(600))
+        note("pad 4 after 0.6 s: level \(stage.level), direction \(stage.fadeDirection)")
+        pad(5)
+        await waitUntil { stage.playingCueID == nil }
+        note("after the fade-out: playing \(stage.isPlaying), level reset to \(stage.level)")
+        for number in [55, 62, 69] { model.mouseUp(on: Pitch(midiNumber: number)) }
+
+        // A cue shorter than its take fades out to end on its target.
+        if let id = stage.current?.cue.id {
+            model.sketchpad.updatePlay { $0.updateCue(id) { $0.targetSeconds = 6 } }
+            let started = Date()
+            pad(3)
+            try? await Task.sleep(for: .milliseconds(3500))
+            shot("stage-auto-fade")
+            await waitUntil { stage.playingCueID == nil }
+            note("target 6 s of \(stage.plan?.duration ?? 0): stopped after \(Date().timeIntervalSince(started)) s")
+            model.sketchpad.updatePlay { $0.updateCue(id) { $0.targetSeconds = 45 } }
+        }
+
+        // Pad 1 steps back while a layer plays: it bows out, and the next cue has none.
+        pad(3)
+        try? await Task.sleep(for: .milliseconds(400))
+        pad(1)
+        note("pad 1: on \(stage.current?.label ?? "none"), old layer still sounding \(stage.playingCueID != nil)")
+        try? await Task.sleep(for: .milliseconds(1400))
+        note("1.4 s later: old layer sounding \(stage.playingCueID != nil)")
+        shot("stage-live-cue")
+        pad(2)
+        note("pad 2: on \(stage.current?.label ?? "none")")
+        pad(3)
+        pad(16)
+        note("pad 16 (panic): playing \(stage.playingCueID != nil)")
+        note("exit while locked is offered: \(!stage.isLocked)")
+        model.section = .sketchpad
     }
 
     /// Builds a play, plays two takes and an overdub with the mouse, and writes every export.

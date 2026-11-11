@@ -6,6 +6,9 @@ import SwiftUI
 public enum Palette {
     // Surfaces, darkest to lightest.
     public static let background = Color(hex: 0x0C0D10)
+    /// Stage mode: nearer to black than the window, so the screen throws no light on stage.
+    public static let stage = Color(hex: 0x050506)
+    public static let stagePanel = Color(hex: 0x0E0F12)
     public static let sidebar = Color(hex: 0x101114)
     public static let surface = Color(hex: 0x131418)
     public static let surfaceRaised = Color(hex: 0x1C1E23)

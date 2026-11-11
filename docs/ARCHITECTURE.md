@@ -56,10 +56,10 @@ Value types shared by everything:
 
 - Built on the open-source SwiftMIDI packages (MIT; the successor to MIDIKit, by the same author), which wrap CoreMIDI and handle hot-plug (HW-4). Only the `swift-midi-io` package is used for devices.
 - `DeviceManager` publishes connected devices and matches them to `DeviceProfile`s. Profiles exist for the Roland A-49 and the Launchkey Mini MK3: key count, pads, knobs, port names.
-- `InputRouter` turns raw MIDI into two streams: `PerformanceEvent` (note on/off, sustain, with host timestamp and source device) and `ControlEvent` (pad, knob, transport button).
+- `DeviceManager` turns raw MIDI into two streams: `PerformanceEvent` (note on/off, sustain, with host timestamp and source device) and `ControlEvent` (a pad struck or a knob moved). Notes on a device's pad channel and every controller but the sustain pedal are controls.
 - Role assignment follows HW-1 and HW-2: one device connected means it is the instrument; both connected means the A-49 is the instrument and the Launchkey's pads and knobs become controls while its keys stay playable.
-- The Launchkey exposes two USB ports. Keys, pads, and knobs arrive on port 1. Port 2 is a "DAW mode" port that allows pad LED feedback; it is used from milestone 4 onward, not in milestone 1.
-- `ControlMap` (MIDI learn, HW-6) is designed in now and built in milestone 4.
+- The Launchkey exposes two USB ports. Keys, pads, and knobs arrive on port 1. Port 2 is a "DAW mode" port: the app uses it to light the pads (`PadLights.swift`), and in DAW mode the knobs report there instead of on port 1.
+- `ControlMap` says which `ControlSource` (pad or controller) runs which `ControlAction` (HW-6). Actions belong to a context (practice, stage, everywhere), so one pad can do one thing while practicing and another on stage. `ControlMap.launchkeyDefaults` is the map out of the box; MIDI learn is `assign`, which takes the control away from any action it would clash with.
 
 ### Sound
 
@@ -69,6 +69,8 @@ Value types shared by everything:
   - `MIDIOutInstrument` and `AudioUnitInstrument`: later; they implement the same protocol.
 - Two instrument slots from the start: one for the user's playing, one for the part the app plays (other hand, backing).
 - `PaletteSynth`: Apple's multi-timbral General MIDI synthesizer with a different sound on each of sixteen channels (SN-2). The Sketchpad plays it live and gives each layer of a take its own channel. It reads GeneralUser GS when bundled, otherwise the sounds built into macOS.
+- `PaletteSynth.setVolume(_:channel:)` turns one channel down without touching the others; `Fade` is the line the loudness follows. Together they fade a recorded layer under live playing (LV-2). The sampler cannot do this: its volume is one for all channels.
+- `SplitInstrument`: two instruments behind one, layered over every key or split at a key (LV-1).
 - `Metronome`: scheduled clicks on the audio clock, with count-in.
 - `LatencyCalibration`: stores an output offset per audio route; applied to visual timing and to scoring (SN-4).
 
@@ -105,6 +107,8 @@ Everything the Sketchpad needs that has no screen (milestone 3). It depends only
 - `Chord.detect` names the chord formed by the held keys; `SketchKey.detect` finds the key of recent playing with the Krumhansl–Kessler profiles; `ChordSuggestion.next` proposes three chords to follow (CO-3).
 - `MoodPalette` lists scales, chord moves, a tempo range and sounds for each dramatic intent (CO-4).
 - `Play`, `PlayScene` and `Cue` are the organizer (CO-5). `PlayStore` writes one JSON file per play under `~/Library/Application Support/Midiot/Plays/`.
+
+For the stage (milestone 4): a `Cue` carries a `StagePreset` (sound, second sound layered or split, tempo). `CueSheet` flattens a play into performance order, and `LayerPlan` works out how long a cue's recorded layer lasts and when it must start fading to end on the cue's target length.
 
 Export is spread over the modules that own each format: `ScoreImport.MIDIFileWriter` and `MusicXMLWriter` (grand staff and lead sheet) for CO-6, and `Notation.ScorePDF` for CO-7. `ScorePDF` draws the same engraved shapes the screen shows into PDF pages, one line of music at a time, so lines are never cut across sheets.
 

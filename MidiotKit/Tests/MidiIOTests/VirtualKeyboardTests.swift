@@ -11,7 +11,11 @@ import Testing
     @MainActor @Test func hotPlugAndPlaying() async throws {
         let received = Mutex<[PerformanceEvent.Kind]>([])
         let manager = DeviceManager()
-        manager.start { event in received.withLock { $0.append(event.kind) } }
+        let controls = Mutex<[ControlEvent]>([])
+        manager.start(
+            onEvent: { event in received.withLock { $0.append(event.kind) } },
+            onControl: { event in controls.withLock { $0.append(event) } }
+        )
         #expect(manager.startError == nil)
 
         var client = MIDIClientRef()
@@ -30,6 +34,7 @@ import Testing
         send(0x2090_3C64) // note on, middle C, velocity 100
         send(0x20B0_407F) // sustain pedal down
         send(0x2080_3C00) // note off, middle C
+        send(0x20B0_1540) // a knob: controller 21 at 64
 
         try await wait { received.withLock { $0.count } == 3 }
         #expect(received.withLock { $0 } == [
@@ -37,17 +42,69 @@ import Testing
             .sustain(isDown: true),
             .noteOff(pitch: .middleC),
         ])
+        try await wait { controls.withLock { $0.count } == 1 }
+        #expect(controls.withLock { $0.map(\.source) } == [.controller(number: 21)])
+        #expect(controls.withLock { $0.map(\.value) } == [64])
 
         MIDIEndpointDispose(source)
         try await wait { !manager.devices.contains { $0.name == "Midiot Test Keyboard" } }
         MIDIClientDispose(client)
     }
 
+    /// A stand-in for the Launchkey's DAW port receives the take-over and the pad colours.
+    @MainActor @Test func padLights() async throws {
+        let manager = DeviceManager()
+        manager.start(onEvent: { _ in })
+        let words = Mutex<[UInt32]>([])
+
+        var client = MIDIClientRef()
+        MIDIClientCreateWithBlock("MidiotLightTests" as CFString, &client, nil)
+        let port = Self.destination(named: "Launchkey Mini MK3 DAW Port", client: client) { new in
+            words.withLock { $0 += new }
+        }
+
+        // DAW mode on (channel 16, note 12), then the Drum layout (controller 3 = 1).
+        try await wait { words.withLock { $0.count } >= 2 }
+        #expect(words.withLock { Array($0.prefix(2)) } == [0x209F_0C7F, 0x20BF_0301])
+
+        // Checked by what arrives at all, not by order: a running copy of the app sees this
+        // port too and sends it its own colours.
+        func received(_ word: UInt32) -> Bool { words.withLock { $0.contains(word) } }
+
+        manager.setPadLights([40: PadLight(.blue), 41: PadLight(.green, .pulsing), 42: PadLight(.yellow, .dim)])
+        try await wait { received(0x2099_2A0F) } // pad 3 dim yellow
+        try await wait { received(0x2099_282D) } // pad 1 steady blue
+        try await wait { received(0x209B_2915) } // pad 2 pulsing green
+        try await wait { received(0x2089_2400) } // the others are told to go dark
+
+        manager.setPadLights([40: PadLight(.blue), 41: PadLight(.green), 42: PadLight(.yellow, .dim)])
+        try await wait { received(0x2099_2915) }
+
+        words.withLock { $0 = [] }
+        manager.releasePadLights()
+        try await wait { words.withLock { $0.contains { $0 & 0xFFEF_FF00 == 0x208F_0C00 } } } // note 12 off, channel 16
+
+        MIDIEndpointDispose(port)
+        MIDIClientDispose(client)
+    }
+
+    /// A virtual MIDI destination. Made outside the main actor because it is called on the
+    /// MIDI thread.
+    private nonisolated static func destination(
+        named name: String, client: MIDIClientRef, receive: @escaping @Sendable ([UInt32]) -> Void
+    ) -> MIDIEndpointRef {
+        var port = MIDIEndpointRef()
+        MIDIDestinationCreateWithProtocol(client, name as CFString, ._1_0, &port) { list, _ in
+            for packet in list.unsafeSequence() { receive(Array(packet.sequence())) }
+        }
+        return port
+    }
+
     /// Polls until `condition` holds, failing after two seconds.
-    @MainActor private func wait(_ condition: () -> Bool) async throws {
+    @MainActor private func wait(_ condition: () -> Bool, sourceLocation: SourceLocation = #_sourceLocation) async throws {
         for _ in 0..<40 where !condition() {
             try await Task.sleep(for: .milliseconds(50))
         }
-        try #require(condition())
+        try #require(condition(), sourceLocation: sourceLocation)
     }
 }
