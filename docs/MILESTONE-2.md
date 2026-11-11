@@ -30,6 +30,7 @@ Differences from the plan:
 ## After milestone 3 (2026-11-11)
 
 - **One hand at a time:** the path now teaches each drill with the right hand alone, then the left, and only after all one-hand units brings the same drills back hands together. A step's best score counts only runs played with that step's hands. Scores from before this change belong to the hands-together steps.
+- **Timing bands:** while timing is judged (not when listening, not in wait mode), the lane shows a green band just above the keys and a blue one above it. A key pressed while its note's lower edge is in the green band counts as on time; in the blue band, early. The bands follow the tempo.
 - **Falling notes:** the lane was redrawn only when a note started or stopped. It now redraws every frame (measured at 120 per second).
 
 ## Out of scope

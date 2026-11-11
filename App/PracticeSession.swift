@@ -111,6 +111,14 @@ final class PracticeSession {
         relay.session = self
     }
 
+    /// How far ahead of a note, in beats at the current tempo, a press still counts as on time
+    /// and as early. Nil when timing is not judged: listening, or wait mode.
+    var timingWindows: (onTime: Double, early: Double)? {
+        guard !handMode.playerHands.isEmpty, !waitsForPlayer else { return nil }
+        let beatsPerSecond = song.tempoMap.bpm(atBeat: max(beat, 0)) / 60 * rate
+        return (PlaybackEngine.onTimeWindow * beatsPerSecond, PlaybackEngine.matchWindow * beatsPerSecond)
+    }
+
     /// Current position in beats; cheap enough to call every frame.
     var beat: Double { player.beat }
 

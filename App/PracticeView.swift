@@ -10,6 +10,7 @@ struct PracticeView: View {
     @Environment(AppModel.self) private var model
     @AppStorage(NoteNamingSetting.storageKey) private var naming = NoteNaming.letters
     @AppStorage("practiceViewMode") private var viewMode = ViewMode.notes
+    @Environment(\.locale) private var locale
 
     /// How the song is shown (requirement SP-1).
     enum ViewMode: String {
@@ -113,6 +114,11 @@ struct PracticeView: View {
     /// Falling notes and keyboard share one frame so each note lands on its key.
     private func lane(_ session: PracticeSession, showsNotes: Bool) -> some View {
         let range = session.foldedRange ?? displayRange(for: session.song)
+        // Labels of the timing bands above the keys, in the interface language.
+        var onTime: LocalizedStringResource = "On time", early: LocalizedStringResource = "Early"
+        onTime.locale = locale
+        early.locale = locale
+        let onTimeLabel = String(localized: onTime), earlyLabel = String(localized: early)
         return VStack(spacing: 0) {
             if showsNotes {
               FallingNotesView(
@@ -125,6 +131,11 @@ struct PracticeView: View {
                     )
                 },
                 barLines: session.song.measures.map { .init(beat: $0.start, label: String($0.number)) },
+                timingZones: {
+                    session.timingWindows.map {
+                        .init(onTimeBeats: $0.onTime, earlyBeats: $0.early, onTimeLabel: onTimeLabel, earlyLabel: earlyLabel)
+                    }
+                },
                 position: { session.beat }
             )
               .frame(minHeight: 160)
