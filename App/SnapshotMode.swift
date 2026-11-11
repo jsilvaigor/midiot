@@ -88,6 +88,11 @@ enum SnapshotMode {
             for run in 0..<2 {
                 session.seek(to: 0)
                 session.togglePlay()
+                if run == 0 {
+                    // Playing in time: the on-time and early bands show above the keys.
+                    try? await Task.sleep(for: .milliseconds(600))
+                    save(RootView(), model: model, to: folder.appendingPathComponent("practice-timing.png"))
+                }
                 var played = Set<Int>()
                 while session.isPlaying {
                     let beat = session.beat

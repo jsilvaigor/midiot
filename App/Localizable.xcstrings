@@ -2455,6 +2455,16 @@
         }
       }
     },
+    "On time" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tempo"
+          }
+        }
+      }
+    },
     "One finger per key in C position, first the right hand alone, then the left." : {
       "localizations" : {
         "pt-BR" : {
