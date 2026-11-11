@@ -42,8 +42,21 @@ final class AppModel {
     /// with their exact time.
     @ObservationIgnored private let activePlayer = PlayerBox()
 
-    init(store: SongStore = .standard) {
+    @ObservationIgnored private let seedsStarterSongs: Bool
+
+    /// Milliseconds subtracted from every key press before it is judged, on top of the
+    /// automatic allowance for audio output delay. Raise it if on-time notes are marked late.
+    var timingAdjustment = UserDefaults.standard.double(forKey: "timingAdjustmentMs") {
+        didSet {
+            UserDefaults.standard.set(timingAdjustment, forKey: "timingAdjustmentMs")
+            updatePressCompensation()
+        }
+    }
+
+    /// - Parameter seedsStarterSongs: copy the bundled starter pieces into an empty library, once.
+    init(store: SongStore = .standard, seedsStarterSongs: Bool = true) {
         self.store = store
+        self.seedsStarterSongs = seedsStarterSongs
     }
     @ObservationIgnored private var isStarted = false
 
@@ -52,11 +65,13 @@ final class AppModel {
         isStarted = true
 
         songs = store.entries()
+        seedStarterSongsIfNeeded()
         audio.attach(piano)
         audio.attach(clicks)
         do {
             try audio.start()
             latency = audio.latency
+            updatePressCompensation()
         } catch {
             soundStatus = .failed(error.localizedDescription)
             return
@@ -82,7 +97,7 @@ final class AppModel {
             switch event.kind {
             case let .noteOn(pitch, velocity):
                 piano.noteOn(pitch, velocity: velocity)
-                activePlayer.player?.playerPressed(pitch, at: event.seconds)
+                activePlayer.pressed(pitch, at: event.seconds)
             case let .noteOff(pitch): piano.noteOff(pitch)
             case let .sustain(isDown): piano.setSustain(isDown)
             }
@@ -97,6 +112,22 @@ final class AppModel {
         pressed.removeAll()
         range = devices.devices.mainInstrument?.profile.range ?? .fortyNineKeys
         latency = audio.latency
+        updatePressCompensation()
+    }
+
+    /// The player hears the app's notes late by the output delay and plays along with what
+    /// they hear, so that delay is taken off their press times before judging (requirement SN-4).
+    private func updatePressCompensation() {
+        activePlayer.pressCompensation = (latency?.total ?? 0) + timingAdjustment / 1000
+    }
+
+    private func seedStarterSongsIfNeeded() {
+        let key = "didSeedStarterSongs"
+        guard seedsStarterSongs, songs.isEmpty, !UserDefaults.standard.bool(forKey: key),
+              let urls = Bundle.main.urls(forResourcesWithExtension: "musicxml", subdirectory: "Songs"), !urls.isEmpty
+        else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        importSongs(from: urls.sorted { $0.lastPathComponent > $1.lastPathComponent })
     }
 
     // MARK: Library
@@ -137,7 +168,14 @@ final class AppModel {
         let store = store
         Task {
             do {
-                let loaded = try await Task.detached(priority: .userInitiated) { try store.load(entry) }.value
+                var loaded = try await Task.detached(priority: .userInitiated) { try store.load(entry) }.value
+                // On a keyboard too small for the piece, rearrange it to fit (requirement HW-3).
+                var foldedRange: KeyboardRange?
+                if let keyboard = devices.devices.mainInstrument?.profile.range, !keyboard.canPlay(loaded.song) {
+                    let target = keyboard.bestPosition(for: loaded.song)
+                    loaded = LoadedSong(entry: loaded.entry, song: loaded.song.folded(into: target), pages: loaded.pages)
+                    foldedRange = target
+                }
                 session?.stop()
                 let new = PracticeSession(loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks) { run in
                     try? store.appendRun(run, for: entry)
@@ -147,6 +185,7 @@ final class AppModel {
                     new.handMode = .both
                     new.waitsForPlayer = true
                 }
+                new.foldedRange = foldedRange
                 session = new
                 activePlayer.player = new.player
                 section = .practice
@@ -168,7 +207,7 @@ final class AppModel {
     func mouseDown(on pitch: Pitch) {
         piano.noteOn(pitch, velocity: 90)
         pressed.insert(pitch)
-        session?.player.playerPressed(pitch)
+        activePlayer.pressed(pitch, at: nil)
     }
 
     func mouseUp(on pitch: Pitch) {
@@ -196,8 +235,21 @@ final class AppModel {
 private final class PlayerBox: Sendable {
     private let storage = Mutex<SongPlayer?>(nil)
 
+    private let compensation = Mutex<Double>(0)
+
     var player: SongPlayer? {
         get { storage.withLock { $0 } }
         set { storage.withLock { $0 = newValue } }
+    }
+
+    /// Seconds taken off each press time before judging.
+    var pressCompensation: Double {
+        get { compensation.withLock { $0 } }
+        set { compensation.withLock { $0 = newValue } }
+    }
+
+    /// Reports a key press to the open song, if any. `time` nil means now.
+    func pressed(_ pitch: Pitch, at time: Double?) {
+        player?.playerPressed(pitch, at: (time ?? SongPlayer.now) - pressCompensation)
     }
 }

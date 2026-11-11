@@ -145,3 +145,37 @@ public extension Song {
         return Song(title: title, notes: linked, tempoMap: tempoMap, measures: bars)
     }
 }
+
+public extension KeyboardRange {
+    /// This keyboard moved by whole octaves to where it covers the most notes of the song.
+    func bestPosition(for song: Song) -> KeyboardRange {
+        let candidates = (-5...5).map { KeyboardRange(lowest: Pitch(midiNumber: lowest.midiNumber + $0 * 12), keyCount: keyCount) }
+            .filter { $0.lowest.midiNumber >= 0 && $0.highest.midiNumber <= 127 }
+        func covered(_ range: KeyboardRange) -> Int { song.notes.count { range.contains($0.pitch) } }
+        // On a tie, stay closest to where the keyboard already is.
+        return candidates.max {
+            (covered($0), -abs($0.lowest.midiNumber - lowest.midiNumber)) < (covered($1), -abs($1.lowest.midiNumber - lowest.midiNumber))
+        } ?? self
+    }
+}
+
+public extension Song {
+    /// The song rearranged to fit a small keyboard: notes outside the range move by octaves
+    /// into it, and a note that lands on another at the same moment is dropped (requirement HW-3).
+    func folded(into range: KeyboardRange) -> Song {
+        guard range.keyCount >= 12 else { return self }
+        var taken = Set<[Int]>()
+        // Notes already in range claim their place first, so they are never the ones dropped.
+        let ordered = notes.sorted { range.contains($0.pitch) && !range.contains($1.pitch) }
+        var folded: [Note] = []
+        for var note in ordered {
+            var number = note.pitch.midiNumber
+            while number < range.lowest.midiNumber { number += 12 }
+            while number > range.highest.midiNumber { number -= 12 }
+            note.pitch = Pitch(midiNumber: number)
+            guard taken.insert([Int((note.start * 1000).rounded()), number]).inserted else { continue }
+            folded.append(note)
+        }
+        return Song(title: title, notes: folded, tempoMap: tempoMap, measures: measures)
+    }
+}

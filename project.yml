@@ -24,6 +24,10 @@ targets:
       - path: Resources/SoundFonts
         type: folder
         buildPhase: resources
+      # Starter pieces copied into the library on first launch.
+      - path: Resources/Songs
+        type: folder
+        buildPhase: resources
     dependencies:
       - { package: MidiotKit, product: MusicCore }
       - { package: MidiotKit, product: MidiIO }

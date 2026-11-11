@@ -181,6 +181,16 @@
         }
       }
     },
+    "Folded to fit %lld keys": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaptada para %lld teclas"
+          }
+        }
+      }
+    },
     "Format": {
       "localizations": {
         "pt-BR": {
@@ -367,6 +377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Metrônomo"
+          }
+        }
+      }
+    },
+    "Midiot already allows for the output delay. Raise this if notes you play on time are marked late; lower it if they are marked early.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Midiot já compensa o atraso de saída. Aumente se notas tocadas no tempo forem marcadas como atrasadas; diminua se forem marcadas como adiantadas."
           }
         }
       }
@@ -637,6 +657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta saída adiciona um atraso perceptível. Use fones com fio ou alto-falantes para praticar."
+          }
+        }
+      }
+    },
+    "Timing adjustment": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajuste de tempo"
           }
         }
       }

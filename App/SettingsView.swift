@@ -11,6 +11,7 @@ struct SettingsView: View {
     private let noticeableDelay: TimeInterval = 0.025
 
     var body: some View {
+        @Bindable var model = model
         Form {
             Section {
                 Picker("Language", selection: $language) {
@@ -47,6 +48,15 @@ struct SettingsView: View {
                     LabeledContent("Output delay") {
                         Text("\(Int((latency.total * 1000).rounded())) ms").font(.readoutSmall)
                     }
+                    LabeledContent("Timing adjustment") {
+                        HStack(spacing: 12) {
+                            Slider(value: $model.timingAdjustment, in: -100...200, step: 5).frame(width: 180)
+                            Text("\(Int(model.timingAdjustment)) ms").font(.readoutSmall).frame(width: 64, alignment: .trailing)
+                        }
+                    }
+                    Text("Midiot already allows for the output delay. Raise this if notes you play on time are marked late; lower it if they are marked early.")
+                        .font(.sans(12))
+                        .foregroundStyle(Palette.textSecondary)
                     if latency.total > noticeableDelay {
                         Label(
                             "This output adds noticeable delay. Use wired headphones or speakers for practice.",

@@ -67,6 +67,12 @@ public struct LoadedSong: Sendable {
     /// Engraved pages. For MIDI imports this is a draft generated from the notes; it is empty
     /// only if that draft could not be engraved.
     public let pages: [ScoreScene]
+
+    public init(entry: SongEntry, song: Song, pages: [ScoreScene]) {
+        self.entry = entry
+        self.song = song
+        self.pages = pages
+    }
 }
 
 /// Keeps imported songs as plain files, one folder per song (requirement PL-3):

@@ -29,7 +29,7 @@ enum SnapshotMode {
     private static func run(folder: URL, songs: [URL], beat: Double) async {
         let storeRoot = folder.appendingPathComponent("library")
         try? FileManager.default.removeItem(at: storeRoot)
-        let model = AppModel(store: SongStore(root: storeRoot))
+        let model = AppModel(store: SongStore(root: storeRoot), seedsStarterSongs: false)
         model.start()
 
         save(RootView(), model: model, to: folder.appendingPathComponent("library-empty.png"))

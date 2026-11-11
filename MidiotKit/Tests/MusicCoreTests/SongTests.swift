@@ -57,3 +57,33 @@ import Testing
         #expect(KeyboardRange.twentyFiveKeys.canPlay(song(pitches: [])))
     }
 }
+
+@Suite struct FoldingTests {
+    func song(_ pitches: [(Int, Double)]) -> Song {
+        Song(
+            title: "T",
+            notes: pitches.map { Note(id: 0, pitch: Pitch(midiNumber: $0.0), start: $0.1, duration: 1, hand: .right) },
+            tempoMap: TempoMap(bpm: 60), measures: Song.evenMeasures(beatsPerMeasure: 4, covering: 4)
+        )
+    }
+
+    @Test func keyboardMovesToWhereTheNotesAre() {
+        // Most notes sit in C5...C7; one stray low note.
+        let s = song([(72, 0), (76, 1), (84, 2), (96, 3), (40, 3)])
+        #expect(KeyboardRange.twentyFiveKeys.bestPosition(for: s).lowest == Pitch(midiNumber: 72))
+    }
+
+    @Test func outOfRangeNotesMoveByOctavesAndCollisionsMerge() {
+        let range = KeyboardRange.twentyFiveKeys // 48...72
+        let folded = song([(36, 0), (60, 0), (84, 0), (79, 1), (45, 2)]).folded(into: range)
+        // 36 and 84 both fold onto pitches at beat 0: 36 -> 48, 84 -> 72 (60 stays).
+        #expect(folded.notes.filter { $0.start == 0 }.map(\.pitch.midiNumber) == [48, 60, 72])
+        #expect(folded.notes.first { $0.start == 1 }?.pitch.midiNumber == 67)
+        #expect(folded.notes.first { $0.start == 2 }?.pitch.midiNumber == 57)
+        #expect(folded.notes.allSatisfy { range.contains($0.pitch) })
+
+        // A folded note landing on an existing one is dropped; the original stays.
+        let merged = song([(60, 0), (72, 0), (84, 0)]).folded(into: range)
+        #expect(merged.notes.map(\.pitch.midiNumber) == [60, 72])
+    }
+}

@@ -59,6 +59,10 @@ struct PracticeView: View {
                     Text(verbatim: session.loaded.entry.format == .midi ? "MIDI" : "MusicXML")
                     Text(verbatim: "·")
                     Text("\(session.song.measures.count) bars")
+                    if let folded = session.foldedRange {
+                        Text(verbatim: "·")
+                        Text("Folded to fit \(folded.keyCount) keys").foregroundStyle(Palette.accentHighlight)
+                    }
                 }
                 .font(.sans(12))
                 .foregroundStyle(Palette.textSecondary)
@@ -97,7 +101,7 @@ struct PracticeView: View {
 
     /// Falling notes and keyboard share one frame so each note lands on its key.
     private func lane(_ session: PracticeSession, showsNotes: Bool) -> some View {
-        let range = displayRange(for: session.song)
+        let range = session.foldedRange ?? displayRange(for: session.song)
         return VStack(spacing: 0) {
             if showsNotes {
               FallingNotesView(

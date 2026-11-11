@@ -32,6 +32,8 @@ final class PracticeSession {
     /// Where each beat and bar falls on the engraved pages.
     let layout: ScoreLayout
     var hasSheet: Bool { !loaded.pages.isEmpty && !layout.isEmpty }
+    /// Set when the song was rearranged to fit a small keyboard: the range it was folded into.
+    var foldedRange: KeyboardRange?
     /// The real-time player. Safe to use from any thread, including the MIDI thread.
     nonisolated let player: SongPlayer
 
