@@ -16,6 +16,11 @@ public final class DeviceManager {
 
     @ObservationIgnored private let manager: MIDIManager
     @ObservationIgnored private var isStarted = false
+    /// DAW ports of the Launchkeys whose pads the app is lighting.
+    @ObservationIgnored private var lightPorts: Set<Int32> = []
+    @ObservationIgnored private var wantedLights: [Int: PadLight] = [:]
+    /// What each pad was last told; a pad missing here has not been told anything yet.
+    @ObservationIgnored private var sentLights: [Int: PadLight?] = [:]
     @ObservationIgnored private let log = Logger(subsystem: "dev.midiot.Midiot", category: "midi")
 
     public init() {
@@ -25,7 +30,11 @@ public final class DeviceManager {
     /// Starts listening.
     /// - Parameter onEvent: called for every playing gesture, on the MIDI thread, so sound can be
     ///   triggered without waiting for the main thread.
-    public func start(onEvent: @escaping @Sendable (PerformanceEvent) -> Void) {
+    /// - Parameter onControl: called for every pad and knob gesture, also on the MIDI thread.
+    public func start(
+        onEvent: @escaping @Sendable (PerformanceEvent) -> Void,
+        onControl: @escaping @Sendable (ControlEvent) -> Void = { _ in }
+    ) {
         guard !isStarted else { return }
         isStarted = true
 
@@ -43,12 +52,27 @@ public final class DeviceManager {
             try manager.addInputConnection(
                 to: .allOutputs,
                 tag: "keyboards",
-                receiver: .events { events, timeStamp, source in
+                receiver: .events { [weak self] events, timeStamp, source in
                     let device = source?.device
                     let profile = DeviceProfile.matching(deviceName: device?.name ?? source?.name ?? "")
+                    // The Launchkey's DAW port reports its buttons and knobs; nothing on it is playing.
+                    let isDAWPort = profile.model == .launchkeyMiniMK3 && LaunchkeyLights.isDAWPort(name: source?.name ?? "")
                     for event in events {
-                        guard let kind = PerformanceEvent.Kind(event, padChannel: profile.padChannel) else { continue }
-                        onEvent(PerformanceEvent(kind: kind, hostTime: timeStamp, deviceID: device?.uniqueID))
+                        if isDAWPort {
+                            if case let .cc(cc) = event, cc.controller.number == LaunchkeyLights.padModeController, cc.channel == 15 {
+                                // The pads changed layout; their lights need sending again.
+                                Task { @MainActor in self?.padLayoutChanged(to: Int(cc.value.midi1Value)) }
+                            } else if case .cc = event, let control = ControlEvent(event, padChannel: nil, deviceID: device?.uniqueID) {
+                                onControl(control)
+                            } else if let control = LaunchkeyLights.padPress(event, deviceID: device?.uniqueID) {
+                                // In DAW mode the Mini reports its drum pads here, not on the keyboard port.
+                                onControl(control)
+                            }
+                        } else if let kind = PerformanceEvent.Kind(event, padChannel: profile.padChannel) {
+                            onEvent(PerformanceEvent(kind: kind, hostTime: timeStamp, deviceID: device?.uniqueID))
+                        } else if let control = ControlEvent(event, padChannel: profile.padChannel, deviceID: device?.uniqueID) {
+                            onControl(control)
+                        }
                     }
                 }
             )
@@ -74,5 +98,76 @@ public final class DeviceManager {
             devices = found
             log.info("Connected keyboards: \(found.map(\.name).joined(separator: ", "), privacy: .public)")
         }
+        connectLights()
+    }
+
+    // MARK: Pad lights (requirement HW-2)
+
+    /// Lights the pads: `lights` is keyed by the note each pad sends; pads left out go dark.
+    /// Only the Launchkey Mini MK3 has lights the app can drive.
+    public func setPadLights(_ lights: [Int: PadLight]) {
+        wantedLights = lights
+        sendLights()
+    }
+
+    /// Gives the pads back to the device. Call before the app quits.
+    public func releasePadLights() {
+        guard !lightPorts.isEmpty else { return }
+        try? manager.managedOutputConnections[Self.lightsTag]?.send(events: LaunchkeyLights.leave)
+        lightPorts = []
+        sentLights = [:]
+    }
+
+    private static let lightsTag = "pad lights"
+
+    /// Finds the Launchkey's DAW port and takes its pads over, whenever devices come and go.
+    private func connectLights() {
+        let ports = manager.endpoints.inputs.filter {
+            DeviceProfile.matching(deviceName: $0.device?.name ?? $0.name).model == .launchkeyMiniMK3
+                && LaunchkeyLights.isDAWPort(name: $0.name)
+        }
+        let ids = Set(ports.map(\.uniqueID))
+        guard ids != lightPorts else { return }
+        lightPorts = ids
+        sentLights = [:]
+        manager.remove(.outputConnection, .withTag(Self.lightsTag))
+        guard !ports.isEmpty else { return }
+        do {
+            try manager.addOutputConnection(to: .inputs(ports), tag: Self.lightsTag)
+            try manager.managedOutputConnections[Self.lightsTag]?.send(events: LaunchkeyLights.enter)
+            log.info("Pad lights on: \(ports.map(\.name).joined(separator: ", "), privacy: .public)")
+        } catch {
+            lightPorts = []
+            log.error("Pad lights failed: \(String(describing: error), privacy: .public)")
+        }
+        sendLights()
+        // A port that has only just appeared can miss what is sent straight away; say it again
+        // once it has settled.
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard let self, self.lightPorts == ids else { return }
+            try? self.manager.managedOutputConnections[Self.lightsTag]?.send(events: LaunchkeyLights.enter)
+            self.sentLights = [:]
+            self.sendLights()
+        }
+    }
+
+    private func padLayoutChanged(to layout: Int) {
+        // Colours sent while another layout was showing are lost; send them all again.
+        guard layout == LaunchkeyLights.drumLayout else { return }
+        sentLights = [:]
+        sendLights()
+    }
+
+    /// Sends only what changed since last time.
+    private func sendLights() {
+        guard !lightPorts.isEmpty, let connection = manager.managedOutputConnections[Self.lightsTag] else { return }
+        var events: [MIDIEvent] = []
+        for note in DeviceProfile.launchkeyPadNotes where sentLights[note] != .some(wantedLights[note]) {
+            events += LaunchkeyLights.events(pad: note, light: wantedLights[note])
+            sentLights[note] = .some(wantedLights[note])
+        }
+        guard !events.isEmpty else { return }
+        try? connection.send(events: events)
     }
 }

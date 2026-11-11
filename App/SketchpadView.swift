@@ -278,6 +278,7 @@ private struct CueDetail: View {
                 header
                 chips
                 takes
+                if let take = model.take { layers(of: take) }
                 if model.take != nil { toolbar }
             }
             .padding(.horizontal, 28)
@@ -446,6 +447,75 @@ private struct CueDetail: View {
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
+    // MARK: Layers
+
+    /// One row per layer of the selected take: its sound, how much it holds, and what can be
+    /// done to it alone.
+    private func layers(of take: Take) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Layers").capsLabel()
+            ForEach(Array(take.layers.enumerated()), id: \.element.id) { index, layer in
+                layerRow(layer, number: index + 1)
+            }
+        }
+    }
+
+    private func layerRow(_ layer: Layer, number: Int) -> some View {
+        HStack(spacing: 8) {
+            Text("Layer \(number)").font(.sans(13, weight: .medium)).foregroundStyle(Palette.textPrimary)
+                .frame(width: 66, alignment: .leading)
+            Menu {
+                ForEach(SketchSound.Group.allCases, id: \.self) { group in
+                    Section {
+                        ForEach(SketchSound.catalog.filter { $0.group == group }) { sound in
+                            Toggle(isOn: Binding(get: { sound.program == layer.program }, set: { _ in model.setProgram(sound.program, ofLayer: layer.id) })) {
+                                Text(SketchNames.sound(sound))
+                            }
+                        }
+                    } header: {
+                        Text(SketchNames.group(group))
+                    }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Text(SketchNames.sound(SketchSound.sound(program: layer.program)))
+                        .font(.sans(13)).foregroundStyle(Palette.textPrimary).lineLimit(1)
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10)).foregroundStyle(Palette.textSecondary)
+                }
+                .padding(.horizontal, 12).frame(width: 164, height: 34)
+                .background(Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .contentShape(Rectangle())
+            }
+            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+            .accessibilityLabel(Text("Instrument"))
+            Group {
+                if layer.notes.count == 1 { Text("1 note") } else { Text("\(layer.notes.count) notes") }
+            }
+            .font(.mono(12)).foregroundStyle(Palette.textSecondary).lineLimit(1).fixedSize()
+            Spacer(minLength: 0)
+            layerButton(layer.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
+                        label: layer.isMuted ? "Unmute layer" : "Mute layer",
+                        tint: layer.isMuted ? Palette.accentHighlight : Palette.textSecondary) { model.toggleMute(layer: layer.id) }
+            layerButton("trash", label: "Delete layer", tint: Palette.textSecondary) { model.deleteLayer(layer.id) }
+        }
+        .padding(.horizontal, 14).frame(minHeight: 48)
+        .background(Palette.surface.opacity(0.8), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Palette.hairline))
+        .opacity(layer.isMuted ? 0.6 : 1)
+        .accessibilityElement(children: .contain)
+    }
+
+    private func layerButton(_ systemImage: String, label: LocalizedStringKey, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage).font(.system(size: 13, weight: .medium)).foregroundStyle(tint)
+                .frame(width: 34, height: 34).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(Text(label))
+        .accessibilityLabel(Text(label))
+    }
+
     // MARK: Tools
 
     private var toolbar: some View {
@@ -606,7 +676,8 @@ struct TakeRoll: View {
                         let isSelected = selected.contains(ref)
                         let color = note.pitch < Take.handSplit ? Palette.handLeft : Palette.handRight
                         let path = Path(roundedRect: frame, cornerRadius: min(frame.height / 2, 2))
-                        context.fill(path, with: .color(color.opacity(selected.isEmpty || isSelected ? 0.9 : 0.4)))
+                        let muted = take.layers.indices.contains(ref.layer) && take.layers[ref.layer].isMuted
+                        context.fill(path, with: .color(color.opacity(muted ? 0.25 : selected.isEmpty || isSelected ? 0.9 : 0.4)))
                         if isSelected {
                             context.stroke(Path(roundedRect: frame.insetBy(dx: -1.5, dy: -1.5), cornerRadius: 3),
                                            with: .color(Palette.textPrimary), lineWidth: 1.5)

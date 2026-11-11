@@ -19,7 +19,8 @@ Three rules:
 | Token | Value | Use |
 | --- | --- | --- |
 | `background` | `#0C0D10` | Window |
-| `sidebar` | `#101114` | Sidebar column |
+| `stage` / `stagePanel` | `#050506` / `#0E0F12` | Stage mode window and its layer card |
+| `sidebar` | `#101114` | Sidebar column; tiles and pads on stage |
 | `surface` | `#131418` | Cards and panels |
 | `surfaceRaised` | `#1C1E23` | Controls, nested panels |
 | `control` | `#26282E` | Selected segment |

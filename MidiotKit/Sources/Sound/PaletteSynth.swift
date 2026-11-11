@@ -61,6 +61,14 @@ public final class PaletteSynth: @unchecked Sendable {
         )
     }
 
+    /// Sets how loud one channel is, without touching the others. Notes already sounding
+    /// follow, which is what lets a recorded layer fade under live playing (requirement LV-2).
+    /// - Parameter level: 0 (silent) to 1 (full).
+    public func setVolume(_ level: Double, channel: Int) {
+        let value = UInt8((min(max(level, 0), 1) * 127).rounded())
+        node.sendController(7, withValue: value, onChannel: UInt8(min(max(channel, 0), 15)))
+    }
+
     /// The instrument that plays on one channel.
     public func voice(channel: Int) -> any Instrument {
         Voice(node: node, channel: UInt8(min(max(channel, 0), 15)))

@@ -23,3 +23,20 @@ extension PerformanceEvent.Kind {
         }
     }
 }
+
+extension ControlEvent {
+    /// Converts a MIDI message into a control gesture, or nil if it is playing: a pad note on
+    /// the device's pad channel, or any controller but the sustain pedal.
+    init?(_ event: MIDIEvent, padChannel: Int?, deviceID: Int32? = nil) {
+        switch event {
+        case let .noteOn(note) where Int(note.channel) == padChannel:
+            self.init(source: .pad(note: Int(note.note.number)), value: Int(note.velocity.midi1Value), deviceID: deviceID)
+        case let .noteOff(note) where Int(note.channel) == padChannel:
+            self.init(source: .pad(note: Int(note.note.number)), value: 0, deviceID: deviceID)
+        case let .cc(cc) where cc.controller != .sustainPedal:
+            self.init(source: .controller(number: Int(cc.controller.number)), value: Int(cc.value.midi1Value), deviceID: deviceID)
+        default:
+            return nil
+        }
+    }
+}

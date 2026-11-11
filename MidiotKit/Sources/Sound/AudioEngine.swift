@@ -48,6 +48,12 @@ public final class AudioEngine: @unchecked Sendable {
         }
     }
 
+    /// Loudness of everything the app plays, 0 to 1.
+    public var volume: Double {
+        get { Double(engine.mainMixerNode.outputVolume) }
+        set { engine.mainMixerNode.outputVolume = Float(min(max(newValue, 0), 1)) }
+    }
+
     public var latency: Latency {
         let sampleRate = engine.outputNode.outputFormat(forBus: 0).sampleRate
         let buffer = sampleRate > 0 ? Double(currentBufferFrames()) / sampleRate : 0

@@ -19,6 +19,12 @@ public struct DeviceProfile: Hashable, Sendable {
     public static let launchkeyMiniMK3 = DeviceProfile(model: .launchkeyMiniMK3, range: .twentyFiveKeys, padChannel: 9)
     public static let generic = DeviceProfile(model: .generic, range: .fortyNineKeys, padChannel: nil)
 
+    /// Notes the Launchkey Mini MK3's sixteen pads send in Drum mode, top row left to right,
+    /// then the bottom row.
+    public static let launchkeyPadNotes = [40, 41, 42, 43, 48, 49, 50, 51, 36, 37, 38, 39, 44, 45, 46, 47]
+    /// Controller numbers of its eight knobs, left to right.
+    public static let launchkeyKnobControllers = 21...28
+
     /// Picks the profile for a device from the name CoreMIDI reports.
     public static func matching(deviceName: String) -> DeviceProfile {
         let name = deviceName.lowercased()

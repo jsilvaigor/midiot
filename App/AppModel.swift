@@ -24,12 +24,22 @@ final class AppModel {
     let devices = DeviceManager()
     var section = AppSection.today {
         didSet {
-            guard (oldValue == .sketchpad) != (section == .sketchpad) else { return }
-            sketchpad.setActive(section == .sketchpad)
+            if (oldValue == .sketchpad) != (section == .sketchpad) { sketchpad.setActive(section == .sketchpad) }
+            if (oldValue == .stage) != (section == .stage) { stage.setActive(section == .stage) }
         }
     }
     /// Plays, cues and takes (milestone 3).
     @ObservationIgnored let sketchpad: SketchpadModel
+    /// Live mode (milestone 4).
+    @ObservationIgnored let stage: StageModel
+    /// Which pad or knob does what (requirement HW-6).
+    private(set) var controlMap = AppModel.savedControlMap() {
+        didSet { UserDefaults.standard.set(try? JSONEncoder().encode(controlMap), forKey: Self.controlMapKey) }
+    }
+    /// The action waiting for a pad or knob to be touched, while MIDI learn is on.
+    var learning: ControlAction?
+    /// Loudness of everything, 0 to 1; a knob can set it.
+    private(set) var volume = 1.0
     /// Minutes practiced per day and what was played through (requirement CU-6).
     private(set) var log = PracticeLog()
     /// Best whole-run accuracy per path step id.
@@ -95,6 +105,7 @@ final class AppModel {
             store: PlayStore(root: store.root.deletingLastPathComponent().appendingPathComponent("Plays", isDirectory: true)),
             capture: capture, piano: piano, palette: palette, clicks: clicks, keyboard: keyboard
         )
+        stage = StageModel(sketchpad: sketchpad, piano: piano, palette: palette, keyboard: keyboard)
     }
     @ObservationIgnored private var isStarted = false
 
@@ -154,6 +165,14 @@ final class AppModel {
                 capture.record(.sustain(isDown: isDown), at: time)
             }
             Task { @MainActor in self?.show(event) }
+        } onControl: { [weak self] event in
+            Task { @MainActor in self?.handle(event) }
+        }
+        followPadLights()
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { [devices] _ in
+            MainActor.assumeIsolated { devices.releasePadLights() }
         }
     }
 
@@ -396,6 +415,146 @@ final class AppModel {
         capture.record(.noteOff(pitch: pitch.midiNumber), at: SongPlayer.now)
         pressed.remove(pitch)
         session?.released(pitch)
+    }
+
+    // MARK: Pads and knobs (requirements HW-2, HW-6, LV-5)
+
+    private static let controlMapKey = "controlMap"
+
+    private static func savedControlMap() -> ControlMap {
+        UserDefaults.standard.data(forKey: controlMapKey).flatMap { try? JSONDecoder().decode(ControlMap.self, from: $0) }
+            ?? .launchkeyDefaults
+    }
+
+    func resetControlMap() {
+        learning = nil
+        controlMap = .launchkeyDefaults
+    }
+
+    func clearControl(_ action: ControlAction) {
+        controlMap.clear(action)
+    }
+
+    /// Where pads and knobs act right now.
+    private var controlContext: ControlAction.Context {
+        if section == .stage { return .stage }
+        if section == .practice, session != nil { return .practice }
+        return .everywhere
+    }
+
+    /// How the pad of `action` should be lit right now: bright when it can be used, dim when
+    /// it cannot, pulsing while what it started is under way. The screen and the Launchkey
+    /// both follow this (requirement HW-2).
+    func padLightStyle(_ action: ControlAction) -> PadLight.Style {
+        switch action {
+        case .cueBack: stage.isChoosing || stage.index == 0 ? .dim : .bright
+        case .cueGo: stage.isChoosing || stage.next == nil ? .dim : .bright
+        case .playLayer: stage.isPlaying ? .pulsing : stage.layerTake != nil && !stage.isChoosing ? .bright : .dim
+        case .fadeIn: stage.fadeDirection > 0 ? .pulsing : stage.layerTake != nil && !stage.isChoosing ? .bright : .dim
+        case .fadeOut: stage.fadeDirection < 0 ? .pulsing : stage.playingCueID != nil ? .bright : .dim
+        case .stopLayer: stage.playingCueID != nil ? .bright : .dim
+        case .playPause: session?.isPlaying == true ? .pulsing : .bright
+        case .toggleWait: session?.waitsForPlayer == true ? .bright : .dim
+        case .toggleMetronome: session?.metronomeIsOn == true ? .bright : .dim
+        case .toggleCountIn: session?.countInIsOn == true ? .bright : .dim
+        case .handLeft: session?.handMode == .left ? .bright : .dim
+        case .handBoth: session?.handMode == .both ? .bright : .dim
+        case .handRight: session?.handMode == .right ? .bright : .dim
+        case .restart, .tempoDown, .tempoUp, .panic, .tempo, .volume: .bright
+        }
+    }
+
+    /// Keeps the Launchkey's pads lit to match what they do, for as long as the app runs.
+    private func followPadLights() {
+        withObservationTracking {
+            devices.setPadLights(controlMap.padLights(in: controlContext) { padLightStyle($0) })
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.followPadLights() }
+        }
+    }
+
+    /// Last position seen of each controller, to tell a button press from a held or falling value.
+    @ObservationIgnored private var controllerValues: [Int: Int] = [:]
+
+    /// A pad was hit or a knob moved.
+    func handle(_ event: ControlEvent) {
+        // A press is a pad struck, or a controller crossing its midpoint on the way up.
+        let isPress: Bool
+        switch event.source {
+        case .pad:
+            isPress = event.value > 0
+        case let .controller(number):
+            isPress = event.value >= 64 && (controllerValues[number] ?? 0) < 64
+            controllerValues[number] = event.value
+        }
+
+        if let action = learning {
+            // Knob actions take the first controller that moves; button actions wait for a press.
+            guard action.isContinuous || isPress else { return }
+            if controlMap.assign(event.source, to: action) { learning = nil }
+            return
+        }
+        guard let action = controlMap.action(for: event.source, in: controlContext) else { return }
+        if action.isContinuous {
+            set(action, to: Double(event.value) / 127)
+        } else if isPress {
+            perform(action)
+        }
+    }
+
+    private func perform(_ action: ControlAction) {
+        switch action {
+        case .playPause: session?.togglePlay()
+        case .restart: session?.restart()
+        case .toggleWait: session?.waitsForPlayer.toggle()
+        case .toggleMetronome: session?.metronomeIsOn.toggle()
+        case .toggleCountIn: session?.countInIsOn.toggle()
+        case .handLeft: session?.handMode = .left
+        case .handBoth: session?.handMode = .both
+        case .handRight: session?.handMode = .right
+        case .tempoDown: nudgeRate(by: -0.05)
+        case .tempoUp: nudgeRate(by: 0.05)
+        case .cueBack: stage.back()
+        case .cueGo: stage.go()
+        case .playLayer: stage.playLayer()
+        case .fadeIn: stage.fadeIn()
+        case .fadeOut: stage.fadeOut()
+        case .stopLayer: stage.stopLayer()
+        case .panic: panic()
+        case .tempo, .volume: break
+        }
+    }
+
+    private func set(_ action: ControlAction, to fraction: Double) {
+        switch action {
+        case .tempo:
+            // A quarter speed to one and a half, in steps of 5%.
+            session?.rate = ((0.25 + fraction * 1.25) * 20).rounded() / 20
+        case .volume:
+            volume = fraction
+            audio.volume = fraction
+        default: break
+        }
+    }
+
+    private func nudgeRate(by step: Double) {
+        guard let session else { return }
+        session.rate = min(max(((session.rate + step) * 20).rounded() / 20, 0.25), 1.5)
+    }
+
+    /// Silences everything at once: the keyboard, anything the app is playing, and held
+    /// notes (requirement LV-6).
+    func panic() {
+        session?.pause()
+        sketchpad.stop()
+        stage.panic()
+        auditionTask?.cancel()
+        keyboard.current.allNotesOff()
+        piano.allNotesOff()
+        for channel in 1...3 { piano.voice(channel: channel).allNotesOff() }
+        palette.allNotesOff()
+        clicks.allNotesOff()
+        pedalIsDown = false
     }
 
     private func show(_ event: PerformanceEvent) {

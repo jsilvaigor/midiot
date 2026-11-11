@@ -22,7 +22,10 @@ final class SketchpadModel {
 
     /// Tempo new takes are measured at, and the metronome's speed.
     var bpm = UserDefaults.standard.object(forKey: "sketchTempo") as? Double ?? 90 {
-        didSet { UserDefaults.standard.set(bpm, forKey: "sketchTempo") }
+        didSet {
+            UserDefaults.standard.set(bpm, forKey: "sketchTempo")
+            refreshIdleClick()
+        }
     }
     /// The sound the keyboard plays on the Sketchpad.
     var sound = SketchSound.sound(program: UserDefaults.standard.object(forKey: "sketchProgram") as? Int) {
@@ -31,7 +34,15 @@ final class SketchpadModel {
             if isActive { routeKeyboard() }
         }
     }
-    var metronomeIsOn = false { didSet { player?.setMetronome(metronomeIsOn || isOverdubbing) } }
+    /// Clicks at the tempo while idle, playing a take, and always while overdubbing. The click
+    /// goes to the speakers only, so it is never heard as playing and never lands in a take.
+    var metronomeIsOn = UserDefaults.standard.bool(forKey: "sketchMetronome") {
+        didSet {
+            UserDefaults.standard.set(metronomeIsOn, forKey: "sketchMetronome")
+            player?.setMetronome(metronomeIsOn || isOverdubbing)
+            refreshIdleClick()
+        }
+    }
     /// Step that Quantize snaps to, in beats: 0.5 is an eighth note.
     var quantizeGrid = 0.5
 
@@ -66,6 +77,8 @@ final class SketchpadModel {
     @ObservationIgnored private let keyboard: LiveSound
     @ObservationIgnored private var isActive = false
     @ObservationIgnored private var player: SongPlayer?
+    /// Clicks while nothing plays, and the tempo it was started at.
+    @ObservationIgnored private var idleClick: (player: SongPlayer, bpm: Double)?
     /// Host time of beat 0 of the take being recorded over.
     @ObservationIgnored private var overdubOrigin = 0.0
     @ObservationIgnored private var undoStack: [(cue: UUID, takes: [Take])] = []
@@ -235,6 +248,30 @@ final class SketchpadModel {
         if id == selectedTakeID { selectTake(cue?.bestTake?.id) }
     }
 
+    // MARK: Layers
+
+    /// Plays the layer with another instrument.
+    func setProgram(_ program: Int?, ofLayer id: UUID) {
+        edit(keepsSelection: true) { $0.updatingLayer(id) { $0.program = program } }
+    }
+
+    /// Silences a layer for listening, on the stage too, or brings it back. The notes stay.
+    func toggleMute(layer id: UUID) {
+        guard let take else { return }
+        stop()
+        replace(take.updatingLayer(id) { $0.isMuted.toggle() })
+    }
+
+    /// Removes a layer, which can be undone. The only layer of a take goes with the take.
+    func deleteLayer(_ id: UUID) {
+        guard let take else { return }
+        guard let rest = take.deletingLayer(id) else { return deleteTake(take.id) }
+        stop()
+        rememberForUndo()
+        replace(rest)
+        selectedNotes = []
+    }
+
     /// With notes selected, keeps only the stretch they span; otherwise removes the silence
     /// before the first note.
     func trim() {
@@ -314,7 +351,8 @@ final class SketchpadModel {
     }
 
     private func start(_ take: Take, overdub: Bool) {
-        stop()
+        stopPlayback()
+        idleClick = nil
         let (song, layerOfNote) = take.song(title: "")
         guard !song.notes.isEmpty else { return }
 
@@ -348,10 +386,39 @@ final class SketchpadModel {
         overdubOrigin = SongPlayer.now - player.beat * 60 / max(take.bpm, 1)
         playingTakeID = take.id
         isPlaying = true
+        refreshIdleClick()
     }
 
     /// Stops playback. An overdub in progress is kept as a new layer if anything was played.
     func stop() {
+        stopPlayback()
+        refreshIdleClick()
+    }
+
+    /// Runs the metronome on its own while nothing plays and the Sketchpad is shown, so the
+    /// player can rehearse against it. Does nothing if it already runs at the right tempo.
+    private func refreshIdleClick() {
+        guard isActive, metronomeIsOn, player == nil else {
+            idleClick = nil
+            return
+        }
+        if let idleClick, idleClick.bpm == bpm { return }
+        // Four-beat bars for as long as anyone will sit at it; the engine counts the clicks.
+        let song = Song(
+            title: "", notes: [], tempoMap: TempoMap(bpm: bpm),
+            measures: Song.evenMeasures(beatsPerMeasure: 4, covering: 4 * 3600)
+        )
+        let click = SongPlayer(song: song) { [clicks] event in
+            if case let .click(isDownbeat) = event {
+                clicks.noteOn(Pitch(midiNumber: isDownbeat ? 76 : 77), velocity: isDownbeat ? 110 : 80)
+            }
+        }
+        click.setMetronome(true)
+        click.play()
+        idleClick = (click, bpm)
+    }
+
+    private func stopPlayback() {
         guard let player else { return }
         player.pause()
         self.player = nil
@@ -376,6 +443,7 @@ final class SketchpadModel {
     /// Call when the Sketchpad is shown or left: on it, the keyboard plays the chosen sound.
     func setActive(_ active: Bool) {
         isActive = active
+        refreshIdleClick()
         if active {
             routeKeyboard()
         } else {
@@ -469,7 +537,7 @@ final class SketchpadModel {
     ///   - subtitle: line under the title of a PDF.
     func export(_ format: ExportFormat, layerName: (Int) -> String, subtitle: String) -> Data? {
         guard let cue, let take = exportTake, take.noteCount > 0 else { return nil }
-        let song = take.song(title: cue.name).song
+        let song = take.song(title: cue.name, includingMuted: true).song
         let fifths = SketchKey.detect(notes: take.layers.flatMap(\.notes).map { (pitch: $0.pitch, duration: $0.duration) })?.fifths ?? 0
 
         switch format {

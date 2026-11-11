@@ -7,8 +7,17 @@ struct RootView: View {
     @Environment(\.locale) private var locale
 
     var body: some View {
+        if model.section == .stage {
+            // The stage takes the whole window: nothing but the performance (requirement LV-4).
+            StageView(model: model.stage)
+        } else {
+            splitView
+        }
+    }
+
+    private var splitView: some View {
         @Bindable var model = model
-        NavigationSplitView {
+        return NavigationSplitView {
             SidebarView(selection: $model.section, devices: deviceStatuses)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
@@ -23,6 +32,8 @@ struct RootView: View {
                 ChordsView()
             case .sketchpad:
                 SketchpadView(model: model.sketchpad)
+            case .stage:
+                EmptyView()
             case .settings:
                 SettingsView()
             }
@@ -64,6 +75,11 @@ struct SidebarView: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
+                SidebarHeading("Perform")
+                item(.stage)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
                 item(.settings)
             }
 
@@ -94,7 +110,7 @@ struct SidebarView: View {
 }
 
 enum AppSection: String, CaseIterable, Identifiable {
-    case today, library, practice, chords, sketchpad, settings
+    case today, library, practice, chords, sketchpad, stage, settings
 
     var id: String { rawValue }
 
@@ -105,6 +121,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .practice: "Practice"
         case .chords: "Chords"
         case .sketchpad: "Sketchpad"
+        case .stage: "Stage"
         case .settings: "Settings"
         }
     }
@@ -116,6 +133,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .practice: "pianokeys"
         case .chords: "square.grid.2x2"
         case .sketchpad: "waveform.path"
+        case .stage: "theatermasks"
         case .settings: "slider.horizontal.3"
         }
     }
