@@ -253,8 +253,8 @@ private final class SceneBuilder: NSObject, XMLParserDelegate {
         abs(transform.a * transform.d - transform.b * transform.c).squareRoot()
     }
 
-    /// Replaces the music-font note symbols used in tempo marks with standard Unicode notes,
-    /// which system fonts can draw.
+    /// Replaces the music-font symbols used in tempo marks and chord symbols with standard
+    /// Unicode characters, which system fonts can draw.
     private static func unicodeNotes(for text: String) -> String {
         // SMuFL metronome-mark notes (U+ECA0...) and the older individual-note range (U+E1D0...).
         let map: [Unicode.Scalar: String] = [
@@ -264,6 +264,10 @@ private final class SceneBuilder: NSObject, XMLParserDelegate {
             "\u{E1D2}": "\u{1D15D}", "\u{E1D3}": "\u{1D15E}", "\u{E1D4}": "\u{1D15E}",
             "\u{E1D5}": "\u{2669}", "\u{E1D6}": "\u{2669}",
             "\u{E1D7}": "\u{266A}", "\u{E1D8}": "\u{266A}", "\u{E1E7}": ".",
+            // Accidentals in chord symbols.
+            "\u{E260}": "\u{266D}", "\u{E261}": "\u{266E}", "\u{E262}": "\u{266F}",
+            "\u{ED60}": "\u{266D}", "\u{ED61}": "\u{266E}", "\u{ED62}": "\u{266F}",
+            "\u{EA64}": "\u{266D}", "\u{EA65}": "\u{266E}", "\u{EA66}": "\u{266F}",
         ]
         return String(text.unicodeScalars.map { map[$0] ?? String($0) }.joined())
     }

@@ -12,6 +12,45 @@ public enum MusicXMLWriter {
     ///   - sharpened: a pitch class always written as a sharp, for the raised seventh of a
     ///     minor key (C♯ in D minor, even though the key signature has a flat).
     public static func draft(from song: Song, fifths: Int = 0, sharpened: Int? = nil) -> String {
+        write(song, fifths: fifths, sharpened: sharpened, hands: [.right, .left], chords: [:])
+    }
+
+    /// A chord symbol printed above the staff of a lead sheet.
+    public struct ChordSymbol: Hashable, Sendable {
+        /// Root letter, "A" to "G", and its alteration: 1 sharp, -1 flat.
+        public let step: String
+        public let alter: Int
+        /// MusicXML chord kind, such as "minor-seventh".
+        public let kind: String
+        /// What follows the root when printed: "m7".
+        public let suffix: String
+
+        public init(step: String, alter: Int, kind: String, suffix: String) {
+            self.step = step
+            self.alter = alter
+            self.kind = kind
+            self.suffix = suffix
+        }
+
+        /// - Parameter root: the root as written, "B♭" or "F♯".
+        public init(root: String, kind: String, suffix: String) {
+            self.init(
+                step: String(root.prefix(1)), alter: root.contains("♯") ? 1 : (root.contains("♭") ? -1 : 0),
+                kind: kind, suffix: suffix
+            )
+        }
+    }
+
+    /// Writes a lead sheet: the top line of the song on one staff, with a chord symbol over
+    /// each bar that has one (requirement CO-7).
+    /// - Parameter chords: chord per bar number.
+    public static func leadSheet(from song: Song, chords: [Int: ChordSymbol], fifths: Int = 0) -> String {
+        write(song.melodyLine(), fifths: fifths, sharpened: nil, hands: [.right], chords: chords)
+    }
+
+    private static func write(
+        _ song: Song, fifths: Int, sharpened: Int?, hands: [Hand], chords: [Int: ChordSymbol]
+    ) -> String {
         let spelling = Spelling(fifths: fifths, sharpened: sharpened)
         var xml = """
         <?xml version="1.0" encoding="UTF-8"?>
@@ -35,8 +74,10 @@ public enum MusicXMLWriter {
                 let (beats, unit) = timeSignature(forSixteenths: length)
                 xml += "<time><beats>\(beats)</beats><beat-type>\(unit)</beat-type></time>"
                 if measure.number == song.measures.first?.number {
-                    xml += "<staves>2</staves><clef number=\"1\"><sign>G</sign><line>2</line></clef>"
-                        + "<clef number=\"2\"><sign>F</sign><line>4</line></clef>"
+                    xml += hands.count > 1
+                        ? "<staves>2</staves><clef number=\"1\"><sign>G</sign><line>2</line></clef>"
+                            + "<clef number=\"2\"><sign>F</sign><line>4</line></clef>"
+                        : "<clef><sign>G</sign><line>2</line></clef>"
                 }
                 xml += "</attributes>"
             }
@@ -46,8 +87,13 @@ public enum MusicXMLWriter {
                     + "<per-minute>\(bpm)</per-minute></metronome></direction-type><staff>1</staff><sound tempo=\"\(bpm)\"/></direction>"
             }
             previousLength = length
+            if let chord = chords[measure.number] {
+                xml += "<harmony><root><root-step>\(chord.step)</root-step>"
+                    + (chord.alter != 0 ? "<root-alter>\(chord.alter)</root-alter>" : "")
+                    + "</root><kind text=\"\(escape(chord.suffix))\">\(chord.kind)</kind></harmony>"
+            }
 
-            for (index, hand) in [Hand.right, .left].enumerated() {
+            for (index, hand) in hands.enumerated() {
                 if index > 0 { xml += "<backup><duration>\(length)</duration></backup>" }
                 xml += staff(
                     hand: hand, number: index + 1, song: song, start: start, length: length,
@@ -214,6 +260,32 @@ public enum MusicXMLWriter {
 
     private static func escape(_ text: String) -> String {
         text.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
-            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: ">", with: "&gt;").replacingOccurrences(of: "\"", with: "&quot;")
+    }
+}
+
+public extension Song {
+    /// The top line of the song as a single voice: the highest note at each moment, each
+    /// lasting until the next one starts at the latest. All notes go to the right hand.
+    func melodyLine() -> Song {
+        // Highest note per sixteenth-note position.
+        var top: [Int: Note] = [:]
+        for note in notes {
+            let position = Int((note.start * 4).rounded())
+            if let existing = top[position], existing.pitch >= note.pitch { continue }
+            top[position] = note
+        }
+        let ordered = top.keys.sorted()
+        let line = ordered.enumerated().map { index, position -> Note in
+            var note = top[position]!
+            note.hand = .right
+            note.finger = nil
+            note.notationID = nil
+            if index + 1 < ordered.count {
+                note.duration = min(note.duration, Double(ordered[index + 1] - position) / 4)
+            }
+            return note
+        }
+        return Song(title: title, notes: line, tempoMap: tempoMap, measures: measures)
     }
 }

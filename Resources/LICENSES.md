@@ -26,3 +26,4 @@ Not kept in git; fetched into `Resources/SoundFonts/` by `Scripts/fetch-soundfon
 | Component | Use | Source | License |
 | --- | --- | --- | --- |
 | Salamander Grand Piano V3 (Alexander Holm) | Piano samples | [freepats.zenvoid.org](https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html) | CC-BY 3.0 |
+| GeneralUser GS 2.0 (S. Christian Collins) | Sketchpad sounds: strings, keys, pads, percussion | [mrbumpy409/GeneralUser-GS](https://github.com/mrbumpy409/GeneralUser-GS) | GeneralUser GS License 2.0 |
