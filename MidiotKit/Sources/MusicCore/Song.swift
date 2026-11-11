@@ -40,11 +40,14 @@ public struct Measure: Hashable, Sendable {
     public let number: Int
     public let start: Double
     public let length: Double
+    /// Identifier of the bar in the rendered score, when there is one.
+    public var notationID: String?
 
-    public init(number: Int, start: Double, length: Double) {
+    public init(number: Int, start: Double, length: Double, notationID: String? = nil) {
         self.number = number
         self.start = start
         self.length = length
+        self.notationID = notationID
     }
 
     public var end: Double { start + length }

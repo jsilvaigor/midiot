@@ -204,7 +204,10 @@ private final class SceneBuilder: NSObject, XMLParserDelegate {
         let text = string.trimmingCharacters(in: .newlines)
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty, state.fontSize > 0 else { return }
         let shown = state.isMusicFont ? Self.unicodeNotes(for: text) : text
-        runs.append(.init(text: shown, size: state.fontSize * scale(of: state.transform)))
+        // Music-font symbols are set larger than the surrounding text; the Unicode stand-in
+        // drawn in a text font needs to be closer to the text size.
+        let size = state.fontSize * scale(of: state.transform) * (state.isMusicFont ? 0.7 : 1)
+        runs.append(.init(text: shown, size: size))
     }
 
     func parser(_ parser: XMLParser, didEndElement name: String, namespaceURI: String?, qualifiedName: String?) {
@@ -253,11 +256,14 @@ private final class SceneBuilder: NSObject, XMLParserDelegate {
     /// Replaces the music-font note symbols used in tempo marks with standard Unicode notes,
     /// which system fonts can draw.
     private static func unicodeNotes(for text: String) -> String {
+        // SMuFL metronome-mark notes (U+ECA0...) and the older individual-note range (U+E1D0...).
         let map: [Unicode.Scalar: String] = [
+            "\u{ECA2}": "\u{1D15D}", "\u{ECA3}": "\u{1D15E}", "\u{ECA4}": "\u{1D15E}",
+            "\u{ECA5}": "\u{2669}", "\u{ECA6}": "\u{2669}",
+            "\u{ECA7}": "\u{266A}", "\u{ECA8}": "\u{266A}", "\u{ECB7}": ".",
             "\u{E1D2}": "\u{1D15D}", "\u{E1D3}": "\u{1D15E}", "\u{E1D4}": "\u{1D15E}",
             "\u{E1D5}": "\u{2669}", "\u{E1D6}": "\u{2669}",
-            "\u{E1D7}": "\u{266A}", "\u{E1D8}": "\u{266A}",
-            "\u{E1E7}": ".",
+            "\u{E1D7}": "\u{266A}", "\u{E1D8}": "\u{266A}", "\u{E1E7}": ".",
         ]
         return String(text.unicodeScalars.map { map[$0] ?? String($0) }.joined())
     }

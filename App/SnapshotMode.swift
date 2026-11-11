@@ -59,6 +59,11 @@ enum SnapshotMode {
                 model.mouseDown(on: .middleC)
                 try? await Task.sleep(for: .milliseconds(200))
                 save(RootView(), model: model, to: folder.appendingPathComponent("practice-wait.png"))
+                for mode in ["split", "sheet"] {
+                    UserDefaults.standard.set(mode, forKey: "practiceViewMode")
+                    save(RootView(), model: model, to: folder.appendingPathComponent("practice-\(mode).png"))
+                }
+                UserDefaults.standard.removeObject(forKey: "practiceViewMode")
                 model.mouseUp(on: .middleC)
             }
         }

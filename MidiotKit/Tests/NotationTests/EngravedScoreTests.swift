@@ -44,3 +44,29 @@ import Testing
         }
     }
 }
+
+@Suite struct ScoreLayoutTests {
+    @Test func cursorMovesLeftToRightThroughTheBars() throws {
+        let url = try #require(Bundle.module.url(forResource: "two-hands", withExtension: "musicxml", subdirectory: "Fixtures"))
+        let score = try EngravedScore(musicXML: try Data(contentsOf: url), title: "Fixture")
+        let layout = ScoreLayout(song: score.song, pages: score.pages)
+        #expect(!layout.isEmpty)
+
+        // The fixture fits on one line, so x only grows with time.
+        let xs = try stride(from: 0.0, through: 15.5, by: 0.5).map { try #require(layout.position(atBeat: $0)).x }
+        #expect(zip(xs, xs.dropFirst()).allSatisfy { $0 <= $1 })
+        #expect(xs.last! - xs.first! > 200)
+
+        // Between two notes a beat apart, the cursor is in between.
+        let a = try #require(layout.position(atBeat: 1)), mid = try #require(layout.position(atBeat: 1.5))
+        let b = try #require(layout.position(atBeat: 2))
+        #expect(a.x < mid.x && mid.x < b.x)
+        #expect(a.bottom > a.top)
+
+        // Every bar can be found from a point inside it.
+        for measure in score.song.measures {
+            let bar = try #require(layout.frame(ofMeasure: measure.number))
+            #expect(layout.measure(at: CGPoint(x: bar.frame.midX, y: bar.frame.midY), page: bar.page) == measure.number)
+        }
+    }
+}

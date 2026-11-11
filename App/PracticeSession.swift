@@ -1,6 +1,7 @@
 import DesignSystem
 import Library
 import MusicCore
+import Notation
 import Observation
 import Practice
 import Sound
@@ -28,6 +29,9 @@ final class PracticeSession {
 
     let loaded: LoadedSong
     var song: Song { loaded.song }
+    /// Where each beat and bar falls on the engraved pages.
+    let layout: ScoreLayout
+    var hasSheet: Bool { !loaded.pages.isEmpty && !layout.isEmpty }
     /// The real-time player. Safe to use from any thread, including the MIDI thread.
     nonisolated let player: SongPlayer
 
@@ -60,6 +64,7 @@ final class PracticeSession {
     ///   - onRunEnded: receives the result of each run in which the player played.
     init(loaded: LoadedSong, piano: any Instrument, clicks: any Instrument, onRunEnded: @escaping (RunResult) -> Void) {
         self.loaded = loaded
+        layout = ScoreLayout(song: loaded.song, pages: loaded.pages)
         self.onRunEnded = onRunEnded
         // The player's callback needs the session, which does not exist until init returns.
         let relay = Relay()
@@ -114,6 +119,18 @@ final class PracticeSession {
     func stop() {
         pause()
         endRun(completed: false)
+    }
+
+    /// A click on a bar in the score: loop that bar, or with `extend` grow the loop to reach it.
+    /// Clicking the only looped bar again turns the loop off.
+    func tappedMeasure(_ number: Int, extend: Bool) {
+        if extend, let loopBars {
+            self.loopBars = min(loopBars.lowerBound, number)...max(loopBars.upperBound, number)
+        } else if loopBars == number...number {
+            loopBars = nil
+        } else {
+            loopBars = number...number
+        }
     }
 
     /// Call when the player releases a key.

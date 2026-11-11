@@ -441,6 +441,16 @@
         }
       }
     },
+    "Notes": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas"
+          }
+        }
+      }
+    },
     "Nothing to practice yet": {
       "localizations": {
         "pt-BR": {
@@ -561,6 +571,16 @@
         }
       }
     },
+    "Sheet": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partitura"
+          }
+        }
+      }
+    },
     "Songs you import will appear here.": {
       "localizations": {
         "pt-BR": {
@@ -577,6 +597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Som"
+          }
+        }
+      }
+    },
+    "Split": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dividido"
           }
         }
       }

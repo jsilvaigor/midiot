@@ -1,5 +1,6 @@
 import DesignSystem
 import MusicCore
+import Notation
 import SwiftUI
 
 /// Practice screen: the open song as falling notes over the live keyboard, with transport below.
@@ -7,6 +8,12 @@ import SwiftUI
 struct PracticeView: View {
     @Environment(AppModel.self) private var model
     @AppStorage(NoteNamingSetting.storageKey) private var naming = NoteNaming.letters
+    @AppStorage("practiceViewMode") private var viewMode = ViewMode.notes
+
+    /// How the song is shown (requirement SP-1).
+    enum ViewMode: String {
+        case notes, split, sheet
+    }
 
     /// White keys wider than this look toy-like on a 25-key keyboard in a wide window.
     private let maxWhiteKeyWidth: CGFloat = 44
@@ -16,7 +23,13 @@ struct PracticeView: View {
             VStack(spacing: 0) {
                 header(session)
                 Palette.hairline.frame(height: 1)
-                lane(session)
+                let mode = session.hasSheet ? viewMode : .notes
+                if mode != .notes {
+                    sheet(session)
+                        .frame(maxHeight: mode == .split ? 260 : .infinity)
+                    Palette.hairline.frame(height: 1)
+                }
+                lane(session, showsNotes: mode != .sheet)
                 Palette.hairline.frame(height: 1)
                 TransportBar(session: session)
             }
@@ -51,16 +64,43 @@ struct PracticeView: View {
                 .foregroundStyle(Palette.textSecondary)
             }
             Spacer()
+            if session.hasSheet {
+                SegmentedControl(selection: $viewMode, options: [
+                    .init(.notes, "Notes"), .init(.split, "Split"), .init(.sheet, "Sheet"),
+                ])
+            }
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 16)
     }
 
+    private func sheet(_ session: PracticeSession) -> some View {
+        var colors: [String: Color] = [:]
+        for note in session.song.notes {
+            guard let id = note.notationID else { continue }
+            if session.results[note.id] != nil {
+                colors[id] = color(for: note, in: session)
+            } else if session.awaited.contains(where: { $0.id == note.id }) {
+                colors[id] = note.hand == .right ? Palette.handRight : Palette.handLeft
+            }
+        }
+        return ScoreView(
+            pages: session.loaded.pages, layout: session.layout,
+            ink: Palette.textPrimary, accent: Palette.accent,
+            noteColors: colors, loopBars: session.loopBars,
+            position: { session.beat },
+            onTapMeasure: { session.tappedMeasure($0, extend: NSEvent.modifierFlags.contains(.shift)) }
+        )
+        .padding(.horizontal, Spacing.l)
+        .padding(.vertical, Spacing.s)
+    }
+
     /// Falling notes and keyboard share one frame so each note lands on its key.
-    private func lane(_ session: PracticeSession) -> some View {
+    private func lane(_ session: PracticeSession, showsNotes: Bool) -> some View {
         let range = displayRange(for: session.song)
         return VStack(spacing: 0) {
-            FallingNotesView(
+            if showsNotes {
+              FallingNotesView(
                 range: range,
                 notes: session.song.notes.map { note in
                     FallingNote(
@@ -72,8 +112,11 @@ struct PracticeView: View {
                 barLines: session.song.measures.map { .init(beat: $0.start, label: String($0.number)) },
                 position: { session.beat }
             )
-            .frame(minHeight: 240)
-            .overlay(alignment: .top) { StatusChip(session: session).padding(.top, 16) }
+              .frame(minHeight: 160)
+              .overlay(alignment: .top) { StatusChip(session: session).padding(.top, 16) }
+            } else {
+                StatusChip(session: session).padding(.vertical, 10)
+            }
             keyboard(range: range, sounding: session.sounding, session: session)
         }
         .frame(maxWidth: keyboardWidth(range))

@@ -50,9 +50,13 @@ public struct EngravedScore: Sendable {
         var notes: [Note] = []
         var tempos: [TempoMap.Change] = []
         var measureStarts: [Double] = []
+        var measureIDs: [String] = []
         for entry in entries {
             if let tempo = entry.tempo { tempos.append(.init(beat: entry.qstamp, bpm: tempo)) }
-            if entry.measureOn != nil { measureStarts.append(entry.qstamp) }
+            if let id = entry.measureOn {
+                measureStarts.append(entry.qstamp)
+                measureIDs.append(id)
+            }
             for id in entry.off ?? [] {
                 guard let start = starts.removeValue(forKey: id), let pitch = Self.pitch(of: id, in: toolkit) else { continue }
                 let staff = details.staff[id] ?? 1
@@ -71,7 +75,8 @@ public struct EngravedScore: Sendable {
         let measures = measureStarts.enumerated().map { index, start in
             Measure(
                 number: index + 1, start: start,
-                length: (index + 1 < measureStarts.count ? measureStarts[index + 1] : end) - start
+                length: (index + 1 < measureStarts.count ? measureStarts[index + 1] : end) - start,
+                notationID: measureIDs[index]
             )
         }
         song = Song(title: title, notes: notes, tempoMap: TempoMap(changes: tempos), measures: measures)
