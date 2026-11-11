@@ -37,6 +37,7 @@ let package = Package(
         .testTarget(name: "SoundTests", dependencies: ["Sound"]),
         .testTarget(name: "ScoreImportTests", dependencies: ["ScoreImport"]),
         .testTarget(name: "LibraryTests", dependencies: ["Library"]),
+        .testTarget(name: "PracticeTests", dependencies: ["Practice"]),
         .testTarget(name: "NotationTests", dependencies: ["Notation"], resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]
