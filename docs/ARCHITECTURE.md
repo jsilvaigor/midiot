@@ -72,8 +72,8 @@ Value types shared by everything:
 ### ScoreImport
 
 - **MIDI files**: parsed by a small reader in this module (`MIDIFile`). It reads only what practice needs: notes, tempo, time signatures, and track names. Tracks map to hands when there are exactly two piano tracks; otherwise a split-point heuristic assigns hands, and the user can correct it (SS-1).
-- **MusicXML**: loaded by Verovio. Notes, timing, staff (hand), and fingerings are read back from Verovio's timemap and element attributes, so the played `Song` and the drawn score share element IDs (SS-2).
-- **MIDI → sheet**: a MIDI file has no notation. A transcriber quantizes it and writes MusicXML, which then follows the MusicXML path. Output is a readable draft, not engraving quality.
+- **MusicXML**: loaded by Verovio, in `Notation.EngravedScore` (it lives there because the notes and the drawn pages must come from the same engraving pass). Notes, timing, staff (hand), and fingerings are read back from Verovio's timemap and element attributes, so the played `Song` and the drawn score share element IDs (SS-2).
+- **MIDI → sheet**: a MIDI file has no notation. `MusicXMLWriter` rounds it to sixteenth notes and writes MusicXML, which `Library` engraves and links back to the played notes. Output is a readable draft, not engraving quality.
 
 ### Notation
 

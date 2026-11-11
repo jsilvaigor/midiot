@@ -95,7 +95,8 @@ public struct KeyboardView: View {
                 Gradient(colors: colors),
                 startPoint: frame.origin, endPoint: CGPoint(x: frame.minX, y: frame.maxY)
             ))
-            if highlights[pitch] != nil, frame.width >= 14 {
+            // Black keys are narrow: label them only when the name fits.
+            if highlights[pitch] != nil, frame.width >= CGFloat(naming.name(of: pitch).count) * labelSize * 0.62 {
                 context.draw(
                     Text(verbatim: naming.name(of: pitch))
                         .font(.sans(labelSize * 0.8, weight: .semibold))

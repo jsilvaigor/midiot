@@ -2,6 +2,17 @@
 
 Status: plan v1, 2026-11-10. Architecture in [ARCHITECTURE.md](ARCHITECTURE.md); requirement IDs from [REQUIREMENTS.md](REQUIREMENTS.md).
 
+## Status (2026-11-10)
+
+All seven phases are implemented on the `milestone-1` branch. Automated tests pass and every screen has been reviewed from rendered images (`Midiot -snapshot <folder>`). Not yet checked: real keyboards, how it sounds, and how latency feels. Those are the per-phase "done when" checks below, and they need a person at the keys.
+
+Differences from the plan as written:
+
+- **Hand assignment (phase 3):** automatic only (two tracks, or a split at middle C). The manual split-point control is not built.
+- **25 keys (phase 6):** a piece too wide for the connected keyboard is folded into its range automatically when opened. Choosing between one-hand and folded versions is done with the Hands selector; there is no separate chooser screen.
+- **Latency (phase 6):** output delay is compensated automatically and Settings has a manual timing adjustment. There is no tap-along calibration tool.
+- **Window state restoration:** left to the system default.
+
 ## Goal
 
 Plug in either keyboard, import a song, and practice it with sheet music or falling notes, wait mode, tempo control, loops, hands separate, and live note coloring.
