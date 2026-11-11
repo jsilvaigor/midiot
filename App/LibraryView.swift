@@ -7,6 +7,7 @@ import UniformTypeIdentifiers
 /// The song library: import by button or drag-and-drop, then pick a song to practice.
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(NoteNamingSetting.storageKey) private var naming = NoteNaming.letters
     @State private var isImporting = false
     @State private var isDropTargeted = false
 
@@ -131,6 +132,17 @@ struct LibraryView: View {
                 }
                 .buttonStyle(.plain)
                 .contextMenu {
+                    if entry.format == .midi {
+                        // Where the notes divide between the hands (requirement SS-1).
+                        Menu("Split hands") {
+                            Toggle("Automatic", isOn: Binding(get: { entry.splitPitch == nil }, set: { _ in model.setSplitPitch(nil, for: entry) }))
+                            ForEach([48, 53, 55, 57, 60, 62, 64, 65, 67, 72], id: \.self) { pitch in
+                                Toggle(isOn: Binding(get: { entry.splitPitch == pitch }, set: { _ in model.setSplitPitch(pitch, for: entry) })) {
+                                    Text("At \(naming.nameWithOctave(of: Pitch(midiNumber: pitch)))")
+                                }
+                            }
+                        }
+                    }
                     Button("Delete", role: .destructive) { model.delete(entry) }
                 }
             }

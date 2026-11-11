@@ -128,9 +128,9 @@ struct PracticeView: View {
                 position: { session.beat }
             )
               .frame(minHeight: 160)
-              .overlay(alignment: .top) { StatusChip(session: session).padding(.top, 16) }
+              .overlay(alignment: .top) { StatusChip(session: session, pedalIsDown: model.pedalIsDown).padding(.top, 16) }
             } else {
-                StatusChip(session: session).padding(.vertical, 10)
+                StatusChip(session: session, pedalIsDown: model.pedalIsDown).padding(.vertical, 10)
             }
             keyboard(range: range, sounding: session.sounding, session: session)
         }
@@ -331,6 +331,7 @@ private struct TransportBar: View {
 /// Floating chip over the lane saying who is playing, or that the music is waiting.
 private struct StatusChip: View {
     let session: PracticeSession
+    var pedalIsDown = false
 
     var body: some View {
         let isWaiting = !session.awaited.isEmpty
@@ -348,6 +349,12 @@ private struct StatusChip: View {
             Circle().fill(color).frame(width: 8, height: 8).filamentGlow(color, radius: 5)
             Text(title).font(.sans(13, weight: .medium)).foregroundStyle(Palette.textPrimary)
             Text(detail).font(.sans(13)).foregroundStyle(Palette.textSecondary)
+            if pedalIsDown {
+                // The sustain pedal, shown while it is held (requirement HW-5).
+                Text("Pedal").font(.mono(11, weight: .medium)).foregroundStyle(Palette.accentInk)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Palette.accent, in: Capsule())
+            }
         }
         .padding(.leading, 12)
         .padding(.trailing, 16)

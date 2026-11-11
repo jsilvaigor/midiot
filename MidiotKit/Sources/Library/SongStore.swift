@@ -22,6 +22,9 @@ public struct SongEntry: Identifiable, Codable, Hashable, Sendable {
     public let highestPitch: Int
     /// Length at the song's own tempo, to the end of the last bar.
     public let durationSeconds: Double
+    /// For MIDI files: notes at or above this MIDI pitch go to the right hand. Nil lets the
+    /// app decide (requirement SS-1).
+    public var splitPitch: Int?
 
     public init(
         id: UUID, title: String, addedAt: Date, format: Format, fileName: String,
@@ -114,10 +117,10 @@ public struct LoadedSong: Sendable {
         )
         let draft = Data(MusicXMLWriter.draft(from: song, fifths: fifths, sharpened: sharpened).utf8)
         if let score = try? EngravedScore(musicXML: draft, title: song.title) {
-            self.song = song.adoptingNotation(of: score.song)
+            self.song = song.adoptingNotation(of: score.song).suggestingFingering()
             pages = score.pages
         } else {
-            self.song = song
+            self.song = song.suggestingFingering()
             pages = []
         }
     }
@@ -190,7 +193,7 @@ public struct SongStore: Sendable {
 
     public func load(_ entry: SongEntry) throws -> LoadedSong {
         let data = try Data(contentsOf: folder(for: entry).appendingPathComponent(entry.fileName))
-        let parsed = try Self.parse(data, format: entry.format, title: entry.title)
+        let parsed = try Self.parse(data, format: entry.format, title: entry.title, splitPitch: entry.splitPitch)
         return LoadedSong(entry: entry, song: parsed.song, pages: parsed.pages)
     }
 
@@ -208,6 +211,16 @@ public struct SongStore: Sendable {
         return (try? Self.decoder.decode([RunResult].self, from: data)) ?? []
     }
 
+    /// Changes how a MIDI song's notes are divided between the hands; nil restores the
+    /// automatic choice. Returns the updated entry.
+    @discardableResult
+    public func setSplitPitch(_ pitch: Int?, for entry: SongEntry) throws -> SongEntry {
+        var updated = entry
+        updated.splitPitch = pitch
+        try Self.encoder.encode(updated).write(to: folder(for: entry).appendingPathComponent("entry.json"))
+        return updated
+    }
+
     public func delete(_ entry: SongEntry) throws {
         try FileManager.default.removeItem(at: folder(for: entry))
     }
@@ -216,11 +229,15 @@ public struct SongStore: Sendable {
         root.appendingPathComponent(entry.id.uuidString, isDirectory: true)
     }
 
-    private static func parse(_ data: Data, format: SongEntry.Format, title: String) throws -> (song: Song, pages: [ScoreScene]) {
+    private static func parse(
+        _ data: Data, format: SongEntry.Format, title: String, splitPitch: Int? = nil
+    ) throws -> (song: Song, pages: [ScoreScene]) {
         switch format {
         case .midi:
             do {
-                let song = Song(midiFile: try MIDIFile(data: data), title: title)
+                let hands: HandAssignment = splitPitch.map { .split(at: Pitch(midiNumber: $0)) } ?? .automatic
+                // MIDI has no fingering, so one is suggested (requirement SP-6).
+                let song = Song(midiFile: try MIDIFile(data: data), title: title, hands: hands).suggestingFingering()
                 // MIDI carries no notation, so a draft sheet is written and engraved from the notes.
                 let draft = Data(MusicXMLWriter.draft(from: song).utf8)
                 guard let score = try? EngravedScore(musicXML: draft, title: title) else { return (song, []) }
@@ -238,7 +255,8 @@ public struct SongStore: Sendable {
         case .musicXML:
             do {
                 let score = try EngravedScore(musicXML: data, title: title)
-                return (score.song, score.pages)
+                // Fingerings written in the file are kept; gaps are filled with suggestions.
+                return (score.song.suggestingFingering(), score.pages)
             } catch {
                 let reason = switch error {
                 case .missingResources: "The app's engraving data is missing."

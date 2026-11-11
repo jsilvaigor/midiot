@@ -41,6 +41,14 @@ import Testing
         #expect(loaded.song.notes.allSatisfy { $0.notationID.map { loaded.pages[0].frames[$0] != nil } == true })
         #expect(loaded.song.measures.allSatisfy { $0.notationID != nil })
 
+        // Imported MIDI gets suggested fingering, and its hand split can be changed.
+        #expect(loaded.song.notes.allSatisfy { $0.finger != nil })
+        #expect(loaded.song.notes.map(\.hand) == [.right, .right])
+        let split = try store.setSplitPitch(72, for: entry)
+        #expect(try store.load(split).song.notes.map(\.hand) == [.left, .right])
+        #expect(store.entries().first?.splitPitch == 72)
+        try store.setSplitPitch(nil, for: split)
+
         #expect(store.runs(for: entry).isEmpty)
         let run = RunResult(
             date: Date(timeIntervalSince1970: 1_000), rate: 0.6, hands: ["right"], usedWaitMode: true,

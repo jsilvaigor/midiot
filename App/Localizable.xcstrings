@@ -201,6 +201,26 @@
         }
       }
     },
+    "At %@": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %@"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automático"
+          }
+        }
+      }
+    },
     "Back to Library": {
       "localizations": {
         "pt-BR": {
@@ -1021,6 +1041,16 @@
         }
       }
     },
+    "Pedal": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedal"
+          }
+        }
+      }
+    },
     "Piano": {
       "localizations": {
         "pt-BR": {
@@ -1237,6 +1267,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dividido"
+          }
+        }
+      }
+    },
+    "Split hands": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dividir as mãos"
           }
         }
       }

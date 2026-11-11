@@ -40,6 +40,8 @@ final class AppModel {
     var libraryError: String?
     private(set) var soundStatus = SoundStatus.loading
     private(set) var latency: AudioEngine.Latency?
+    /// Whether the sustain pedal is down (requirement HW-5).
+    private(set) var pedalIsDown = false
     /// Keys currently held, on any keyboard or with the mouse.
     private(set) var pressed: Set<Pitch> = []
     /// Keys shown by the on-screen keyboard.
@@ -129,6 +131,7 @@ final class AppModel {
         // A key held on a keyboard that was just unplugged would otherwise sound forever.
         piano.allNotesOff()
         pressed.removeAll()
+        pedalIsDown = false
         range = devices.devices.mainInstrument?.profile.range ?? .fortyNineKeys
         latency = audio.latency
         updatePressCompensation()
@@ -174,6 +177,13 @@ final class AppModel {
             songs = store.entries()
             libraryError = failures.isEmpty ? nil : failures.joined(separator: "\n")
         }
+    }
+
+    /// Sets where a MIDI song's notes divide between the hands; nil is automatic.
+    func setSplitPitch(_ pitch: Int?, for entry: SongEntry) {
+        if session?.loaded.entry.id == entry.id { closeSong() }
+        _ = try? store.setSplitPitch(pitch, for: entry)
+        songs = store.entries()
     }
 
     func delete(_ entry: SongEntry) {
@@ -344,8 +354,8 @@ final class AppModel {
         case let .noteOff(pitch):
             pressed.remove(pitch)
             session?.released(pitch)
-        case .sustain:
-            break
+        case let .sustain(isDown):
+            pedalIsDown = isDown
         }
     }
 }

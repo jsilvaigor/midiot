@@ -24,6 +24,9 @@ struct SettingsView: View {
                     Text(verbatim: "C D E").tag(NoteNaming.letters)
                     Text(verbatim: "Dó Ré Mi").tag(NoteNaming.solfege)
                 }
+                Stepper(value: $model.dailyGoal, in: 5...120, step: 5) {
+                    LabeledContent("Daily goal") { Text("\(Int(model.dailyGoal)) min").font(.readoutSmall) }
+                }
             }
 
             Section("Keyboards") {
