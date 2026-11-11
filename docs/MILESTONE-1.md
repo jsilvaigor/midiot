@@ -2,6 +2,17 @@
 
 Status: plan v1, 2026-11-10. Architecture in [ARCHITECTURE.md](ARCHITECTURE.md); requirement IDs from [REQUIREMENTS.md](REQUIREMENTS.md).
 
+## Status (2026-11-10)
+
+All seven phases are implemented on the `milestone-1` branch. Automated tests pass and every screen has been reviewed from rendered images (`Midiot -snapshot <folder>`). Not yet checked: real keyboards, how it sounds, and how latency feels. Those are the per-phase "done when" checks below, and they need a person at the keys.
+
+Differences from the plan as written:
+
+- **Hand assignment (phase 3):** automatic only (two tracks, or a split at middle C). The manual split-point control is not built.
+- **25 keys (phase 6):** a piece too wide for the connected keyboard is folded into its range automatically when opened. Choosing between one-hand and folded versions is done with the Hands selector; there is no separate chooser screen.
+- **Latency (phase 6):** output delay is compensated automatically and Settings has a manual timing adjustment. There is no tap-along calibration tool.
+- **Window state restoration:** left to the system default.
+
 ## Goal
 
 Plug in either keyboard, import a song, and practice it with sheet music or falling notes, wait mode, tempo control, loops, hands separate, and live note coloring.
@@ -49,6 +60,23 @@ Time-boxed experiment, done early because it is the largest risk.
 - Check: read notes, timing, staff, and element IDs back from Verovio; color one note by ID; move a cursor smoothly.
 
 **Done when:** a short written result in this file names the chosen option, with option C (custom renderer) as fallback if both fail.
+
+**Result (2026-11-10): option A, native drawing.** Verovio 6.4.1 builds as a Swift package (about two minutes, once) and engraves the test piece in under 20 ms. Its SVG uses a small, regular vocabulary: paths, glyph references, ellipses, and text. `ScoreScene` parses that into Core Graphics paths in about 15 ms, and `ScoreCanvas` draws them in a SwiftUI `Canvas`.
+
+What was confirmed on the two-hand fixture:
+
+- Light-on-dark drawing, as the design calls for.
+- Per-note coloring by element ID (notehead and stem).
+- A bounding box for every note, measure, staff, and system, which gives the cursor position, bar shading, and click-to-loop without a web view.
+- Verovio's timemap gives note on/off times in beats and bar starts, keyed by the same element IDs. Fingerings from the MusicXML are engraved.
+
+Findings that shape later phases:
+
+- Element IDs are regenerated on every load, so a song's notes and its scene must come from the same load.
+- macOS cannot draw Verovio's SVG with its built-in image support (blank result), so that shortcut is out.
+- Option B (`WKWebView`) was not built; option A met every check.
+- Known gap: the note symbol in tempo marks ("♩ = 90") is set in Verovio's music font and draws as a missing-glyph box. Fix in phase 5 by drawing it from Verovio's glyph data or bundling a SMuFL text font.
+- Note pitch must be read after the timemap is rendered; staff and fingering come from Verovio's MEI output.
 
 ### Phase 3 — Songs in, falling notes out
 

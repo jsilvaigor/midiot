@@ -3,26 +3,20 @@ import SwiftUI
 
 /// Main window: sidebar on the left, the selected section on the right.
 struct RootView: View {
-    @State private var section: AppSection = .library
+    @Environment(AppModel.self) private var model
+    @Environment(\.locale) private var locale
 
     var body: some View {
+        @Bindable var model = model
         NavigationSplitView {
-            SidebarView(selection: $section, devices: [])
+            SidebarView(selection: $model.section, devices: deviceStatuses)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
-            switch section {
+            switch model.section {
             case .library:
-                EmptyState(
-                    systemImage: "music.note.list",
-                    title: "No songs yet",
-                    message: "Songs you import will appear here."
-                )
+                LibraryView()
             case .practice:
-                EmptyState(
-                    systemImage: "pianokeys",
-                    title: "Nothing to practice yet",
-                    message: "Choose a song from the Library to start practicing."
-                )
+                PracticeView()
             case .settings:
                 SettingsView()
             }
@@ -30,8 +24,17 @@ struct RootView: View {
     }
 }
 
+extension RootView {
+    /// Connected keyboards in the form the sidebar card shows them.
+    private var deviceStatuses: [DeviceStatus] {
+        model.devices.devices.map { device in
+            let keys = LocalizedStringResource("\(device.profile.range.keyCount) keys", locale: locale)
+            return DeviceStatus(id: String(device.id), name: device.name, detail: String(localized: keys), isConnected: true)
+        }
+    }
+}
+
 /// Wordmark, navigation groups and the connected-devices card.
-/// `devices` stays empty until MidiIO publishes real devices (milestone 1, phase 1).
 struct SidebarView: View {
     @Binding var selection: AppSection
     let devices: [DeviceStatus]

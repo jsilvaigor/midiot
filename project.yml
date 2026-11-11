@@ -18,7 +18,16 @@ targets:
   Midiot:
     type: application
     platform: macOS
-    sources: [App]
+    sources:
+      - App
+      # Folder reference: every file in it, including fetched SoundFonts, is copied into the app.
+      - path: Resources/SoundFonts
+        type: folder
+        buildPhase: resources
+      # Starter pieces copied into the library on first launch.
+      - path: Resources/Songs
+        type: folder
+        buildPhase: resources
     dependencies:
       - { package: MidiotKit, product: MusicCore }
       - { package: MidiotKit, product: MidiIO }
@@ -37,6 +46,7 @@ targets:
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
         SWIFT_EMIT_LOC_STRINGS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 schemes:
   Midiot:
     build:

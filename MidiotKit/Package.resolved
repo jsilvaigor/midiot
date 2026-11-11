@@ -1,0 +1,32 @@
+{
+  "originHash" : "cae82aabffbff5da24643da68d25650f6b38f0a4c43ac162595910a8dc52ac42",
+  "pins" : [
+    {
+      "identity" : "swift-midi-core",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/orchetect/swift-midi-core",
+      "state" : {
+        "revision" : "9b2c7ba5d651e9225c40759e8ba93186412593a6",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "swift-midi-io",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/orchetect/swift-midi-io",
+      "state" : {
+        "revision" : "54ac94028e3825bd8e622d373b0698d196927212",
+        "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "verovio",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rism-digital/verovio",
+      "state" : {
+        "revision" : "fbe8f4695ab0a123cb096e0cf92354b44f7a2fb8"
+      }
+    }
+  ],
+  "version" : 3
+}

@@ -44,6 +44,10 @@ public enum Palette {
     public static let keyWhite = Color(hex: 0xF4F1EA)
     public static let keyWhiteShade = Color(hex: 0xDAD5CB)
     public static let keyBlack = Color(hex: 0x121316)
+    /// Top of a black key, where it catches the light.
+    public static let keyBlackShade = Color(hex: 0x2A2B30)
+    /// Octave labels printed on the white keys.
+    public static let keyLabel = Color(hex: 0x85827B)
 }
 
 public enum Spacing {

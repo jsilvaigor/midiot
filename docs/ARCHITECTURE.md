@@ -31,10 +31,10 @@ App
  ├─ DesignSystem
  ├─ Practice ──► MusicCore
  ├─ Notation ──► MusicCore, Verovio
- ├─ ScoreImport ► MusicCore, MIDIKit, Verovio
+ ├─ ScoreImport ► MusicCore, Verovio
  ├─ Library ───► MusicCore
  ├─ Sound ─────► MusicCore
- └─ MidiIO ────► MusicCore, MIDIKit
+ └─ MidiIO ────► MusicCore, SwiftMIDI
 ```
 
 `Practice` knows nothing about CoreMIDI, audio, or SwiftUI. It consumes timestamped note events and emits state. That keeps the hardest logic testable without a keyboard attached.
@@ -52,7 +52,7 @@ Value types shared by everything:
 
 ### MidiIO
 
-- Built on the open-source MIDIKit library (MIT), which wraps CoreMIDI and handles hot-plug (HW-4).
+- Built on the open-source SwiftMIDI packages (MIT; the successor to MIDIKit, by the same author), which wrap CoreMIDI and handle hot-plug (HW-4). Only the `swift-midi-io` package is used for devices.
 - `DeviceManager` publishes connected devices and matches them to `DeviceProfile`s. Profiles exist for the Roland A-49 and the Launchkey Mini MK3: key count, pads, knobs, port names.
 - `InputRouter` turns raw MIDI into two streams: `PerformanceEvent` (note on/off, sustain, with host timestamp and source device) and `ControlEvent` (pad, knob, transport button).
 - Role assignment follows HW-1 and HW-2: one device connected means it is the instrument; both connected means the A-49 is the instrument and the Launchkey's pads and knobs become controls while its keys stay playable.
@@ -71,15 +71,15 @@ Value types shared by everything:
 
 ### ScoreImport
 
-- **MIDI files**: parsed with MIDIKit's file reader. Tracks map to hands when there are exactly two piano tracks; otherwise a split-point heuristic assigns hands, and the user can correct it (SS-1).
-- **MusicXML**: loaded by Verovio. Notes, timing, staff (hand), and fingerings are read back from Verovio's timemap and element attributes, so the played `Song` and the drawn score share element IDs (SS-2).
-- **MIDI → sheet**: a MIDI file has no notation. A transcriber quantizes it and writes MusicXML, which then follows the MusicXML path. Output is a readable draft, not engraving quality.
+- **MIDI files**: parsed by a small reader in this module (`MIDIFile`). It reads only what practice needs: notes, tempo, time signatures, and track names. Tracks map to hands when there are exactly two piano tracks; otherwise a split-point heuristic assigns hands, and the user can correct it (SS-1).
+- **MusicXML**: loaded by Verovio, in `Notation.EngravedScore` (it lives there because the notes and the drawn pages must come from the same engraving pass). Notes, timing, staff (hand), and fingerings are read back from Verovio's timemap and element attributes, so the played `Song` and the drawn score share element IDs (SS-2).
+- **MIDI → sheet**: a MIDI file has no notation. `MusicXMLWriter` rounds it to sixteenth notes and writes MusicXML, which `Library` engraves and links back to the played notes. Output is a readable draft, not engraving quality.
 
 ### Notation
 
 - Wraps Verovio (C++ engraver, LGPLv3, has a Swift package binding). Input MusicXML, output SVG per system or page.
 - `ScoreView` shows the SVG, a cursor, and per-note colors addressed by element ID (SP-1, FB-1).
-- How the SVG reaches the screen is the main open question; see section 6.
+- The SVG is parsed into native paths (`ScoreScene`) and drawn in a SwiftUI `Canvas` (`ScoreCanvas`); no web view. This was settled by the phase 2 trial, recorded in [MILESTONE-1.md](MILESTONE-1.md).
 
 ### Practice
 
@@ -126,7 +126,7 @@ Rules:
 
 | Component | Use | License | Note |
 | --- | --- | --- | --- |
-| MIDIKit (orchetect) | CoreMIDI wrapper, MIDI file parsing | MIT | |
+| SwiftMIDI `swift-midi-io` (orchetect; formerly MIDIKit) | CoreMIDI wrapper | MIT | |
 | Verovio | MusicXML engraving, timemap | LGPLv3 | Used unmodified, so no obligations beyond attribution for personal use |
 | Salamander Grand Piano | Piano samples | CC-BY 3.0 | Credit Alexander Holm |
 | GeneralUser GS | Wider palette (milestone 3) | GeneralUser GS License 2.0 | Permits personal music creation |
