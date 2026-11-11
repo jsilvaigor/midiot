@@ -1,6 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {},
     "%@ major arpeggio" : {
       "localizations" : {
         "pt-BR" : {
@@ -57,6 +58,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Escala de %@ menor"
+          }
+        }
+      }
+    },
+    "%@ · left hand" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · mão esquerda"
+          }
+        }
+      }
+    },
+    "%@ · right hand" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · mão direita"
           }
         }
       }
@@ -221,6 +242,7 @@
         }
       }
     },
+    "0:00" : {},
     "1 cue" : {
       "localizations" : {
         "pt-BR" : {
@@ -251,6 +273,36 @@
         }
       }
     },
+    "1st inversion" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1ª inversão"
+          }
+        }
+      }
+    },
+    "2nd inversion" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2ª inversão"
+          }
+        }
+      }
+    },
+    "3rd inversion" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3ª inversão"
+          }
+        }
+      }
+    },
     "49 keys" : {
       "localizations" : {
         "pt-BR" : {
@@ -261,12 +313,32 @@
         }
       }
     },
+    "A dominant that waits before it pulls home." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma dominante que espera antes de puxar para o repouso."
+          }
+        }
+      }
+    },
     "A play holds scenes, and each scene holds cues. Everything you keep from the keyboard goes into a cue." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uma peça tem cenas, e cada cena tem deixas. Tudo o que você guardar do teclado vai para uma deixa."
+          }
+        }
+      }
+    },
+    "A richer dominant; funk and blues." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma dominante mais rica; funk e blues."
           }
         }
       }
@@ -321,12 +393,42 @@
         }
       }
     },
+    "Added ninth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nona acrescentada"
+          }
+        }
+      }
+    },
+    "Added notes and ninths" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notas acrescentadas e nonas"
+          }
+        }
+      }
+    },
     "Always listening" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sempre ouvindo"
+          }
+        }
+      }
+    },
+    "An inversion keeps the same notes and puts another one at the bottom. Inversions let the hand stay in one place while the chords change." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma inversão mantém as mesmas notas e põe outra delas embaixo. As inversões deixam a mão no mesmo lugar enquanto os acordes mudam."
           }
         }
       }
@@ -341,12 +443,32 @@
         }
       }
     },
+    "Arpeggios together" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arpejos juntos"
+          }
+        }
+      }
+    },
     "At %@" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Em %@"
+          }
+        }
+      }
+    },
+    "Augmented" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aumentado"
           }
         }
       }
@@ -511,6 +633,26 @@
         }
       }
     },
+    "Both hands at last: the same way, in opposite directions, then one moves while the other holds." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enfim as duas mãos: no mesmo sentido, em sentidos opostos e depois uma se move enquanto a outra sustenta."
+          }
+        }
+      }
+    },
+    "Bright and settled. The home chord of a major key." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claro e estável. O acorde de repouso de um tom maior."
+          }
+        }
+      }
+    },
     "Brighter, lifts" : {
       "localizations" : {
         "pt-BR" : {
@@ -537,6 +679,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancelar"
+          }
+        }
+      }
+    },
+    "Capital numerals are major chords, small ones minor, ° diminished. I, IV and V carry most songs." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numerais maiúsculos são acordes maiores, minúsculos são menores, ° diminutos. I, IV e V sustentam a maioria das músicas."
           }
         }
       }
@@ -601,12 +753,52 @@
         }
       }
     },
+    "Chords" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordes"
+          }
+        }
+      }
+    },
     "Chords & inversions" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Acordes e inversões"
+          }
+        }
+      }
+    },
+    "Chords in %@ major" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordes em %@ maior"
+          }
+        }
+      }
+    },
+    "Chords in %@ minor" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordes em %@ menor"
+          }
+        }
+      }
+    },
+    "Chords with bass" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordes com baixo"
           }
         }
       }
@@ -781,6 +973,26 @@
         }
       }
     },
+    "Darker, inward. The home chord of a minor key." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mais escuro, introspectivo. O acorde de repouso de um tom menor."
+          }
+        }
+      }
+    },
+    "Deep and nocturnal." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profundo e noturno."
+          }
+        }
+      }
+    },
     "Delete" : {
       "localizations" : {
         "pt-BR" : {
@@ -861,12 +1073,52 @@
         }
       }
     },
+    "Diminished" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diminuto"
+          }
+        }
+      }
+    },
+    "Diminished seventh" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sétima diminuta"
+          }
+        }
+      }
+    },
     "Dismiss" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dispensar"
+          }
+        }
+      }
+    },
+    "Dominant ninth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nona da dominante"
+          }
+        }
+      }
+    },
+    "Dominant seventh" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sétima da dominante"
           }
         }
       }
@@ -961,12 +1213,22 @@
         }
       }
     },
-    "Each key’s chord broken across an octave." : {
+    "Each hand alone first, then together. Treble reading and rhythm are known from the flute." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O acorde de cada tonalidade arpejado em uma oitava."
+            "value" : "Primeiro cada mão sozinha, depois juntas. Leitura em clave de sol e ritmo já são conhecidos da flauta."
+          }
+        }
+      }
+    },
+    "Each key’s chord broken across an octave, one hand at a time." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O acorde de cada tom arpejado em uma oitava, uma mão de cada vez."
           }
         }
       }
@@ -997,6 +1259,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mais rápido"
+          }
+        }
+      }
+    },
+    "Fifth (no third)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quinta (sem terça)"
+          }
+        }
+      }
+    },
+    "Fingers" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dedos"
           }
         }
       }
@@ -1101,6 +1383,26 @@
         }
       }
     },
+    "Formula" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fórmula"
+          }
+        }
+      }
+    },
+    "Formula counts steps of the major scale from the root: ♭ lowers a step by a semitone, ♯ raises it. Fingers are for the right hand, thumb = 1; the left hand mirrors them, little finger on the lowest note." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fórmula conta os graus da escala maior a partir da fundamental: ♭ abaixa um grau em um semitom, ♯ eleva. Os dedos são da mão direita, polegar = 1; a mão esquerda espelha, com o dedo mínimo na nota mais grave."
+          }
+        }
+      }
+    },
     "French horn" : {
       "localizations" : {
         "pt-BR" : {
@@ -1157,6 +1459,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pauta de piano"
+          }
+        }
+      }
+    },
+    "Half-diminished" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meio-diminuto"
           }
         }
       }
@@ -1227,6 +1539,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ouvindo"
+          }
+        }
+      }
+    },
+    "Held back; the fourth wants to fall to the third." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contido; a quarta quer descer para a terça."
           }
         }
       }
@@ -1571,6 +1893,16 @@
         }
       }
     },
+    "Lush and wide; calm, open scenes." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cheio e amplo; cenas calmas e abertas."
+          }
+        }
+      }
+    },
     "Lydian" : {
       "localizations" : {
         "pt-BR" : {
@@ -1601,12 +1933,62 @@
         }
       }
     },
+    "Major ninth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nona maior"
+          }
+        }
+      }
+    },
     "Major pentatonic" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pentatônica maior"
+          }
+        }
+      }
+    },
+    "Major seventh" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sétima maior"
+          }
+        }
+      }
+    },
+    "Major sixth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maior com sexta"
+          }
+        }
+      }
+    },
+    "Major with a shimmer on top." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maior com um brilho por cima."
+          }
+        }
+      }
+    },
+    "Major with a sweet, old-fashioned ending." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maior com um final doce, à moda antiga."
           }
         }
       }
@@ -1641,6 +2023,7 @@
         }
       }
     },
+    "MIDI" : {},
     "MIDI (.mid) or MusicXML (.musicxml, .mxl)." : {
       "localizations" : {
         "pt-BR" : {
@@ -1701,6 +2084,76 @@
         }
       }
     },
+    "Minor" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menor"
+          }
+        }
+      }
+    },
+    "Minor ninth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menor com nona"
+          }
+        }
+      }
+    },
+    "Minor seventh" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menor com sétima"
+          }
+        }
+      }
+    },
+    "Minor sixth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menor com sexta"
+          }
+        }
+      }
+    },
+    "Minor with a bittersweet edge." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menor com um toque agridoce."
+          }
+        }
+      }
+    },
+    "Minor with a sharp sting; mystery and suspense." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menor com uma ponta aguda; mistério e suspense."
+          }
+        }
+      }
+    },
+    "Minor, major seventh" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menor com sétima maior"
+          }
+        }
+      }
+    },
     "Mixolydian" : {
       "localizations" : {
         "pt-BR" : {
@@ -1741,6 +2194,7 @@
         }
       }
     },
+    "MusicXML" : {},
     "Mystery" : {
       "localizations" : {
         "pt-BR" : {
@@ -1767,6 +2221,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menor natural"
+          }
+        }
+      }
+    },
+    "Neither major nor minor. Strong in the low register." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem maior nem menor. Forte no registro grave."
           }
         }
       }
@@ -1991,22 +2455,32 @@
         }
       }
     },
-    "One finger per key in C position, both hands, with fingering numbers." : {
+    "One finger per key in C position, first the right hand alone, then the left." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Um dedo por tecla na posição de Dó, com as duas mãos e a numeração dos dedos."
+            "value" : "Um dedo por tecla na posição de Dó, primeiro só a mão direita, depois a esquerda."
           }
         }
       }
     },
-    "One octave up and down in each key, with standard fingering." : {
+    "One octave up and down in each key, one hand at a time, with standard fingering." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uma oitava subindo e descendo em cada tonalidade, com o dedilhado padrão."
+            "value" : "Uma oitava subindo e descendo em cada tom, uma mão de cada vez, com o dedilhado padrão."
+          }
+        }
+      }
+    },
+    "Open and airy; the third is replaced by the second." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aberto e arejado; a terça dá lugar à segunda."
           }
         }
       }
@@ -2161,6 +2635,16 @@
         }
       }
     },
+    "Pick a root. Every card shows the keys to press; click one to hear it." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha uma fundamental. Cada cartão mostra as teclas a pressionar; clique para ouvir."
+          }
+        }
+      }
+    },
     "Piece" : {
       "localizations" : {
         "pt-BR" : {
@@ -2247,12 +2731,42 @@
         }
       }
     },
+    "Point at a chord to see its keys below. Click to hear it." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aponte para um acorde para ver suas teclas abaixo. Clique para ouvir."
+          }
+        }
+      }
+    },
     "Practice" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Praticar"
+          }
+        }
+      }
+    },
+    "Pulls strongly home: play it on V before I." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puxa com força para o repouso: toque no V antes do I."
+          }
+        }
+      }
+    },
+    "Pure tension, the classic melodrama chord. Every note is three semitones apart." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pura tensão, o acorde clássico do melodrama. Cada nota fica a três semitons da outra."
           }
         }
       }
@@ -2283,6 +2797,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ler a pauta da clave de fá com a mão esquerda, depois as linhas suplementares abaixo e acima."
+          }
+        }
+      }
+    },
+    "Reading the cards" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como ler os cartões"
           }
         }
       }
@@ -2407,12 +2931,32 @@
         }
       }
     },
+    "Right hand alone: triads in all three positions, then the I–IV–V–I cadence with smooth voice leading." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Só a mão direita: tríades nas três posições e depois a cadência I–IV–V–I com condução suave das vozes."
+          }
+        }
+      }
+    },
     "Ritual" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ritual"
+          }
+        }
+      }
+    },
+    "Root position" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posição fundamental"
           }
         }
       }
@@ -2443,6 +2987,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Escalas"
+          }
+        }
+      }
+    },
+    "Scales together" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escalas juntas"
           }
         }
       }
@@ -2487,6 +3041,16 @@
         }
       }
     },
+    "Seventh, suspended fourth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sétima com quarta suspensa"
+          }
+        }
+      }
+    },
     "Shaky" : {
       "localizations" : {
         "pt-BR" : {
@@ -2517,6 +3081,16 @@
         }
       }
     },
+    "Sixths and sevenths" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sextas e sétimas"
+          }
+        }
+      }
+    },
     "Sketch" : {
       "localizations" : {
         "pt-BR" : {
@@ -2543,6 +3117,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mais lento"
+          }
+        }
+      }
+    },
+    "Smooth and mellow; the everyday minor of jazz and pop." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macio e aveludado; o menor do dia a dia no jazz e no pop."
+          }
+        }
+      }
+    },
+    "Soft and dreamy; a major chord that floats." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suave e sonhador; um acorde maior que flutua."
           }
         }
       }
@@ -2647,6 +3241,16 @@
         }
       }
     },
+    "Strange and unstable, like a question left open." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estranho e instável, como uma pergunta em aberto."
+          }
+        }
+      }
+    },
     "String ensemble" : {
       "localizations" : {
         "pt-BR" : {
@@ -2663,6 +3267,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cordas e orquestra"
+          }
+        }
+      }
+    },
+    "Suspended and open" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspensos e abertos"
+          }
+        }
+      }
+    },
+    "Suspended fourth" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quarta suspensa"
+          }
+        }
+      }
+    },
+    "Suspended second" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segunda suspensa"
           }
         }
       }
@@ -2727,6 +3361,16 @@
         }
       }
     },
+    "Tense and narrow; wants to move on, usually up a semitone." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tenso e apertado; quer seguir adiante, em geral um semitom acima."
+          }
+        }
+      }
+    },
     "Tension" : {
       "localizations" : {
         "pt-BR" : {
@@ -2737,12 +3381,12 @@
         }
       }
     },
-    "The hands move in opposite directions, then one moves while the other holds." : {
+    "The arpeggios you know, both hands an octave apart." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "As mãos se movem em direções opostas, depois uma se move enquanto a outra sustenta."
+            "value" : "Os arpejos que você já sabe, com as duas mãos a uma oitava de distância."
           }
         }
       }
@@ -2753,6 +3397,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O caminho está completo."
+          }
+        }
+      }
+    },
+    "The right hand’s chords over the root in the left." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os acordes da mão direita sobre a fundamental na esquerda."
+          }
+        }
+      }
+    },
+    "The scales you know, both hands an octave apart." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As escalas que você já sabe, com as duas mãos a uma oitava de distância."
           }
         }
       }
@@ -2887,16 +3551,6 @@
         }
       }
     },
-    "Treble reading and rhythm are marked as known from the flute." : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leitura em clave de sol e ritmo estão marcados como já conhecidos da flauta."
-          }
-        }
-      }
-    },
     "Tremolo strings" : {
       "localizations" : {
         "pt-BR" : {
@@ -2907,12 +3561,12 @@
         }
       }
     },
-    "Triads in all three positions, then the I–IV–V–I cadence with smooth voice leading." : {
+    "Triads" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tríades nas três posições, depois a cadência I–IV–V–I com condução de vozes suave."
+            "value" : "Tríades"
           }
         }
       }
@@ -2953,6 +3607,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Desfazer"
+          }
+        }
+      }
+    },
+    "Uneasy; the ii chord of a minor key, leading to V." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inquieto; o acorde ii de um tom menor, que leva ao V."
           }
         }
       }

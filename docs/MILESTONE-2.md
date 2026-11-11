@@ -27,6 +27,11 @@ Differences from the plan:
 - **Manual hand split:** a "Split hands" menu on MIDI songs in the library offers fixed split points; there is no visual split editor.
 - **Suggested fingering** appears on falling notes. The sheet shows only fingerings that came with the file, or that a drill defines.
 
+## After milestone 3 (2026-11-11)
+
+- **One hand at a time:** the path now teaches each drill with the right hand alone, then the left, and only after all one-hand units brings the same drills back hands together. A step's best score counts only runs played with that step's hands. Scores from before this change belong to the hands-together steps.
+- **Falling notes:** the lane was redrawn only when a note started or stopped. It now redraws every frame (measured at 120 per second).
+
 ## Out of scope
 
 Composing, live mode, more sounds (milestones 3 and 4). A larger built-in library beyond the starter pieces is deferred until the path needs specific pieces.

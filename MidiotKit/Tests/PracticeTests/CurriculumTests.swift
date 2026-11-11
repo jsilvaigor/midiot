@@ -1,4 +1,5 @@
 import Foundation
+import MusicCore
 import Testing
 @testable import Practice
 
@@ -13,8 +14,46 @@ import Testing
         #expect(Curriculum.status(of: unit(.bassClef), best: [:]) == .upcoming)
     }
 
-    @Test func passingDrillsMovesThePathOn() {
-        var best = [Drill.fiveFinger(.c, pattern: 1).id: 0.9]
+    @Test func eachHandLearnsAloneBeforeTheyPlayTogether() {
+        let steps = Curriculum.allSteps
+        // Every drill played together was first met one hand at a time, earlier in the path.
+        for (index, step) in steps.enumerated() where step.hands == .together {
+            if case .rhythm = step.drill { continue } // known from the flute
+            if case .fiveFinger(_, let pattern) = step.drill, pattern > 1 { continue } // made for two hands
+            #expect(steps[..<index].contains { $0.drill == step.drill && $0.hands != .together }, "\(step.id)")
+        }
+        // No hands-together unit comes before the last one-hand unit.
+        let firstTogether = Curriculum.units.firstIndex { !$0.isKnown && $0.steps.contains { $0.hands == .together } }!
+        #expect(Curriculum.units[firstTogether...].allSatisfy { $0.steps.allSatisfy { $0.hands == .together } })
+        #expect(Set(steps.map(\.id)).count == steps.count)
+    }
+
+    @Test func aOneHandStepHasOnlyThatHandsNotes() {
+        let right = Curriculum.Step(.scale(.g), .right), left = Curriculum.Step(.scale(.g), .left)
+        let together = Curriculum.Step(.scale(.g), .together)
+        #expect(right.song(title: "").notes.allSatisfy { $0.hand == .right })
+        #expect(left.song(title: "").notes.allSatisfy { $0.hand == .left })
+        #expect(right.song(title: "").notes.count + left.song(title: "").notes.count == together.song(title: "").notes.count)
+        #expect(right.song(title: "").measures == together.song(title: "").measures)
+        // History kept before one-hand steps existed belongs to the hands-together form.
+        #expect(together.id == Drill.scale(.g).id)
+        #expect(right.id != together.id && left.id != together.id && right.id != left.id)
+        #expect(Curriculum.Step(.bassReading(level: 2), .left).id == Drill.bassReading(level: 2).id)
+    }
+
+    @Test func runsCountOnlyForTheHandsThatPlayed() {
+        let together = Curriculum.Step(.scale(.c), .together), right = Curriculum.Step(.scale(.c), .right)
+        #expect(together.accepts(runHands: ["left", "right"]))
+        #expect(!together.accepts(runHands: ["right"]))
+        #expect(right.accepts(runHands: ["right"]))
+        #expect(!right.accepts(runHands: ["left"]))
+    }
+
+    @Test func passingStepsMovesThePathOn() {
+        let five = Drill.fiveFinger(.c, pattern: 1)
+        var best = [Curriculum.Step(five, .right).id: 0.9]
+        #expect(Curriculum.status(of: unit(.fiveFinger), best: best) == .current(passed: 1))
+        best[Curriculum.Step(five, .left).id] = 0.9
         #expect(Curriculum.status(of: unit(.fiveFinger), best: best) == .done)
         #expect(Curriculum.currentUnit(best: best)?.topic == .bassClef)
         best[Drill.bassReading(level: 1).id] = 0.86
@@ -23,21 +62,23 @@ import Testing
     }
 
     @Test func dailyPlan() {
+        typealias Step = Curriculum.Step
         let first = Curriculum.plan(best: [:], day: 3)
-        #expect(first.warmUp == .scale(.c))
-        #expect(first.drill == .fiveFinger(.c, pattern: 1))
+        #expect(first.warmUp == Step(.scale(.c), .right))
+        #expect(first.drill == Step(.fiveFinger(.c, pattern: 1), .right))
 
-        // With two scales learned the warm-up alternates, and the drill is the next unpassed one.
-        var best = [Drill.fiveFinger(.c, pattern: 1).id: 1.0, Drill.scale(.c).id: 0.9, Drill.scale(.g).id: 0.9]
+        // With two scale steps learned the warm-up alternates, and the drill is the next unpassed one.
+        var best = [Step(.fiveFinger(.c, pattern: 1), .right).id: 1.0, Step(.fiveFinger(.c, pattern: 1), .left).id: 1.0,
+                    Step(.scale(.c), .right).id: 0.9, Step(.scale(.c), .left).id: 0.9]
         for level in 1...3 { best[Drill.bassReading(level: level).id] = 0.9 }
-        #expect(Curriculum.plan(best: best, day: 0).warmUp == .scale(.c))
-        #expect(Curriculum.plan(best: best, day: 1).warmUp == .scale(.g))
-        #expect(Curriculum.plan(best: best, day: 0).drill == .fiveFinger(.c, pattern: 2))
+        #expect(Curriculum.plan(best: best, day: 0).warmUp == Step(.scale(.c), .right))
+        #expect(Curriculum.plan(best: best, day: 1).warmUp == Step(.scale(.c), .left))
+        #expect(Curriculum.plan(best: best, day: 0).drill == Step(.scale(.g), .right))
     }
 
     @Test func everyDrillInThePathExistsInTheCatalog() {
         let catalog = Set(Drill.catalog)
-        #expect(Curriculum.units.flatMap(\.drills).allSatisfy(catalog.contains))
+        #expect(Curriculum.allSteps.map(\.drill).allSatisfy(catalog.contains))
     }
 }
 

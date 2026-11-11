@@ -19,6 +19,8 @@ struct RootView: View {
                 LibraryView()
             case .practice:
                 PracticeView()
+            case .chords:
+                ChordsView()
             case .sketchpad:
                 SketchpadView(model: model.sketchpad)
             case .settings:
@@ -53,6 +55,7 @@ struct SidebarView: View {
                 item(.today)
                 item(.library)
                 item(.practice)
+                item(.chords)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -91,7 +94,7 @@ struct SidebarView: View {
 }
 
 enum AppSection: String, CaseIterable, Identifiable {
-    case today, library, practice, sketchpad, settings
+    case today, library, practice, chords, sketchpad, settings
 
     var id: String { rawValue }
 
@@ -100,6 +103,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .today: "Today"
         case .library: "Library"
         case .practice: "Practice"
+        case .chords: "Chords"
         case .sketchpad: "Sketchpad"
         case .settings: "Settings"
         }
@@ -110,6 +114,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .today: "calendar"
         case .library: "music.note.list"
         case .practice: "pianokeys"
+        case .chords: "square.grid.2x2"
         case .sketchpad: "waveform.path"
         case .settings: "slider.horizontal.3"
         }

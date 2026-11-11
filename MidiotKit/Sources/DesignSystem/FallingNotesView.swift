@@ -56,9 +56,13 @@ public struct FallingNotesView: View {
     }
 
     public var body: some View {
-        TimelineView(.animation) { _ in
+        TimelineView(.animation) { timeline in
+            // The position is read here, once per tick, and the canvas uses the tick's date:
+            // a canvas that depends on neither is redrawn only when something else changes.
+            let now = position()
             Canvas { context, size in
-                draw(in: &context, size: size, now: position())
+                _ = timeline.date
+                draw(in: &context, size: size, now: now)
             }
         }
         .clipped()

@@ -40,6 +40,8 @@ final class SketchpadModel {
     /// The last few different chords, oldest first, ending with `chord`.
     private(set) var chordHistory: [Chord] = []
     private(set) var key: SketchKey?
+    /// A suggested chord whose keys are lit on the on-screen keyboard.
+    var shownChord: Chord?
 
     private(set) var isPlaying = false
     private(set) var isOverdubbing = false
@@ -394,9 +396,10 @@ final class SketchpadModel {
         return palette.voice(channel: channel)
     }
 
-    /// Plays a suggested chord so it can be heard before it is tried.
-    func audition(_ chord: Chord) {
-        preview(chord.voicing.map { [$0] }, together: true)
+    /// Plays a suggested chord as it is shown on the keyboard, so it can be heard before it is tried.
+    func audition(_ chord: Chord, on range: KeyboardRange) {
+        let placed = chord.voicing(in: range)
+        preview(((placed.bass.map { [$0] } ?? []) + placed.tones).map { [$0] }, together: true)
     }
 
     /// Plays a scale up from the tonic of the key heard, or from C.
@@ -431,6 +434,8 @@ final class SketchpadModel {
     func heard(_ pressed: Set<Pitch>) {
         guard pressed.count >= 3, let detected = Chord.detect(pressed), detected != chord else { return }
         chord = detected
+        // The suggestions change with the chord, so a pinned one no longer applies.
+        shownChord = nil
         if chordHistory.last != detected { chordHistory.append(detected) }
         if chordHistory.count > 4 { chordHistory.removeFirst(chordHistory.count - 4) }
         // The key comes from the last minute and a half of playing.

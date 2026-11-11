@@ -7,6 +7,10 @@ import SwiftUI
 /// to try next, and the mood palettes (requirements CO-3, CO-4, SN-2).
 struct SketchAside: View {
     let model: SketchpadModel
+    /// The on-screen keyboard's range, where suggested chords are placed.
+    let range: KeyboardRange
+    /// Suggestion under the pointer; its keys light up without a click.
+    @State private var hovered: Chord?
     /// Mood shown when no cue is selected to hold one.
     @State private var browsedMood: MoodPalette.Mood?
 
@@ -125,8 +129,11 @@ struct SketchAside: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Try next").capsLabel()
             ForEach(model.suggestions, id: \.self) { suggestion in
+                let isShown = model.shownChord == suggestion.chord
                 Button {
-                    model.audition(suggestion.chord)
+                    // Click to hear it and keep its keys lit; click again to clear them.
+                    model.shownChord = isShown && hovered != suggestion.chord ? nil : suggestion.chord
+                    model.audition(suggestion.chord, on: range)
                 } label: {
                     HStack(spacing: 10) {
                         Text(verbatim: suggestion.chord.name(fifths: model.key?.fifths)).font(.serif(22)).foregroundStyle(Palette.textPrimary)
@@ -134,13 +141,23 @@ struct SketchAside: View {
                         Text(SketchNames.effect(suggestion.effect)).font(.sans(12)).foregroundStyle(Palette.textSecondary)
                     }
                     .padding(.horizontal, 14).frame(minHeight: 44)
-                    .background(Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Palette.hairline))
+                    .background(isShown ? Palette.accentSoft : Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(isShown ? Palette.accent.opacity(0.45) : Palette.hairline))
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help(Text("Click to hear it"))
+                .onHover { inside in
+                    if inside {
+                        hovered = suggestion.chord
+                        model.shownChord = suggestion.chord
+                    } else if hovered == suggestion.chord {
+                        hovered = nil
+                    }
+                }
+                .accessibilityAddTraits(isShown ? .isSelected : [])
             }
+            Text("Point at a chord to see its keys below. Click to hear it.")
+                .font(.sans(12)).foregroundStyle(Palette.textTertiary)
         }
     }
 

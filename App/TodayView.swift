@@ -213,7 +213,7 @@ struct TodayView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("Your path").font(.serif(30)).foregroundStyle(Palette.textPrimary)
                 Spacer()
-                Text("Treble reading and rhythm are marked as known from the flute.")
+                Text("Each hand alone first, then together. Treble reading and rhythm are known from the flute.")
                     .font(.sans(13)).foregroundStyle(Palette.textSecondary)
             }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 8)], spacing: 8) {
@@ -227,9 +227,9 @@ struct TodayView: View {
                     Text(unitTitle(selected.topic)).font(.serif(22)).foregroundStyle(Palette.textPrimary)
                     Text(unitBody(selected.topic)).font(.sans(13)).foregroundStyle(Palette.textSecondary)
                 }
-                if !selected.drills.isEmpty {
+                if !selected.steps.isEmpty {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 8)], spacing: 8) {
-                        ForEach(selected.drills, id: \.id) { drill in drillButton(drill) }
+                        ForEach(selected.steps) { step in drillButton(step) }
                     }
                 }
             }
@@ -268,7 +268,7 @@ struct TodayView: View {
                         switch status {
                         case .known: Text("Known")
                         case .done: Text("Done")
-                        case let .current(passed): Text("\(passed) of \(unit.drills.count)").foregroundStyle(Palette.accent)
+                        case let .current(passed): Text("\(passed) of \(unit.steps.count)").foregroundStyle(Palette.accent)
                         case .upcoming: Text("Next")
                         }
                     }
@@ -287,7 +287,7 @@ struct TodayView: View {
         .buttonStyle(.plain)
     }
 
-    private func drillButton(_ drill: Drill) -> some View {
+    private func drillButton(_ drill: Curriculum.Step) -> some View {
         let best = model.drillBest[drill.id]
         let passed = (best ?? 0) >= Curriculum.passAccuracy
         return Button {
@@ -312,8 +312,23 @@ struct TodayView: View {
 
     // MARK: Names
 
-    private func bestText(for drill: Drill) -> Text {
+    private func bestText(for drill: Curriculum.Step) -> Text {
         model.drillBest[drill.id].map { Text("Best \(Int(($0 * 100).rounded()))%") } ?? Text("Not played yet")
+    }
+
+    /// Localized step name: the drill, and the hand when it is played with one.
+    private func title(for step: Curriculum.Step) -> String {
+        let name = title(for: step.drill)
+        var resource: LocalizedStringResource
+        switch step.hands {
+        case .together: return name
+        // A drill written for the left hand needs no reminder of it.
+        case .left where step.drill.isForLeftHandAlone: return name
+        case .right: resource = "\(name) · right hand"
+        case .left: resource = "\(name) · left hand"
+        }
+        resource.locale = locale
+        return String(localized: resource)
     }
 
     /// Localized drill name, with the key written in the chosen note naming.
@@ -347,6 +362,9 @@ struct TodayView: View {
         case .fiveFinger: "Five-finger positions"
         case .bassClef: "Bass clef"
         case .handsTogether: "Hands together"
+        case .scalesTogether: "Scales together"
+        case .arpeggiosTogether: "Arpeggios together"
+        case .chordsTogether: "Chords with bass"
         case .scales: "Scales"
         case .arpeggios: "Arpeggios"
         case .chords: "Chords & inversions"
@@ -357,12 +375,15 @@ struct TodayView: View {
         switch topic {
         case .treble: "You read treble fluently. Nothing to practice here."
         case .rhythm: "You keep time already. The rhythm drills stay available any time."
-        case .fiveFinger: "One finger per key in C position, both hands, with fingering numbers."
+        case .fiveFinger: "One finger per key in C position, first the right hand alone, then the left."
         case .bassClef: "Reading the bass staff with the left hand, then ledger lines below and above."
-        case .handsTogether: "The hands move in opposite directions, then one moves while the other holds."
-        case .scales: "One octave up and down in each key, with standard fingering."
-        case .arpeggios: "Each key’s chord broken across an octave."
-        case .chords: "Triads in all three positions, then the I–IV–V–I cadence with smooth voice leading."
+        case .handsTogether: "Both hands at last: the same way, in opposite directions, then one moves while the other holds."
+        case .scalesTogether: "The scales you know, both hands an octave apart."
+        case .arpeggiosTogether: "The arpeggios you know, both hands an octave apart."
+        case .chordsTogether: "The right hand’s chords over the root in the left."
+        case .scales: "One octave up and down in each key, one hand at a time, with standard fingering."
+        case .arpeggios: "Each key’s chord broken across an octave, one hand at a time."
+        case .chords: "Right hand alone: triads in all three positions, then the I–IV–V–I cadence with smooth voice leading."
         }
     }
 }

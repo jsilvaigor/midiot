@@ -32,7 +32,7 @@ final class AppModel {
     @ObservationIgnored let sketchpad: SketchpadModel
     /// Minutes practiced per day and what was played through (requirement CU-6).
     private(set) var log = PracticeLog()
-    /// Best whole-run accuracy per drill id.
+    /// Best whole-run accuracy per path step id.
     private(set) var drillBest: [String: Double] = [:]
     /// Minutes to practice each day.
     var dailyGoal = UserDefaults.standard.object(forKey: "dailyGoalMinutes") as? Double ?? 25 {
@@ -69,6 +69,7 @@ final class AppModel {
     /// with their exact time.
     @ObservationIgnored private let activePlayer = PlayerBox()
 
+    @ObservationIgnored private var auditionTask: Task<Void, Never>?
     @ObservationIgnored private let seedsStarterSongs: Bool
     /// Drills keep their run history beside the songs, in their own folder.
     @ObservationIgnored private var drillStore: SongStore { SongStore(root: store.root.deletingLastPathComponent().appendingPathComponent("Drills")) }
@@ -267,17 +268,18 @@ final class AppModel {
 
     // MARK: Drills and daily practice
 
-    /// Opens a generated drill on the Practice screen.
-    func open(_ drill: Drill, title: String) {
+    /// Opens a step of the path on the Practice screen: a drill for one hand or both.
+    func open(_ step: Curriculum.Step, title: String) {
         let store = drillStore
+        let drill = step.drill
         let key = drill.key
         // Reading and rhythm drills change daily; everything else is fixed.
         let day = UInt64(max(Date().timeIntervalSince1970 / 86_400, 0))
-        let id = Self.uuid(for: drill.id)
+        let id = Self.uuid(for: step.id)
         Task {
             let loaded = await Task.detached(priority: .userInitiated) {
                 LoadedSong(
-                    generated: drill.song(title: title, seed: day), id: id,
+                    generated: step.song(title: title, seed: day), id: id,
                     fifths: key.fifths, sharpened: key.isMinor ? (key.tonic + 11) % 12 : nil
                 )
             }.value
@@ -288,17 +290,17 @@ final class AppModel {
                 onRunEnded: { [weak self] run in
                     try? store.appendRun(run, for: loaded.entry)
                     self?.refreshDrillBest()
-                    if run.completed { self?.markCompleted(drill.id) }
+                    if run.completed { self?.markCompleted(step.id) }
                 }
             )
             if !devices.devices.isEmpty {
-                if case .bassReading = drill {
-                    // Reading is about finding the note, not keeping time.
-                    new.handMode = .left
-                    new.waitsForPlayer = true
-                } else {
-                    new.handMode = .both
+                switch step.hands {
+                case .right: new.handMode = .right
+                case .left: new.handMode = .left
+                case .together: new.handMode = .both
                 }
+                // Reading is about finding the note, not keeping time.
+                if case .bassReading = drill { new.waitsForPlayer = true }
             }
             returnSection = section == .practice ? returnSection : section
             session = new
@@ -317,9 +319,11 @@ final class AppModel {
     private func refreshDrillBest() {
         let store = drillStore
         var best: [String: Double] = [:]
-        for drill in Drill.catalog {
-            let entry = LoadedSongEntry.placeholder(id: Self.uuid(for: drill.id))
-            if let value = store.runs(for: entry).filter(\.completed).compactMap(\.accuracy).max() { best[drill.id] = value }
+        for step in Curriculum.allSteps {
+            let entry = LoadedSongEntry.placeholder(id: Self.uuid(for: step.id))
+            // A run counts only when the step's hands were the ones playing.
+            let runs = store.runs(for: entry).filter { $0.completed && step.accepts(runHands: $0.hands) }
+            if let value = runs.compactMap(\.accuracy).max() { best[step.id] = value }
         }
         drillBest = best
     }
@@ -366,6 +370,18 @@ final class AppModel {
     }
 
     // MARK: Playing
+
+    /// Sounds a chord on the piano for a moment, for the chord cheat sheet.
+    func audition(_ pitches: [Pitch]) {
+        auditionTask?.cancel()
+        let voice = piano.voice(channel: 3)
+        voice.allNotesOff()
+        auditionTask = Task {
+            for pitch in pitches { voice.noteOn(pitch, velocity: 76) }
+            try? await Task.sleep(for: .milliseconds(1500))
+            if !Task.isCancelled { voice.allNotesOff() }
+        }
+    }
 
     func mouseDown(on pitch: Pitch) {
         keyboard.current.noteOn(pitch, velocity: 90)

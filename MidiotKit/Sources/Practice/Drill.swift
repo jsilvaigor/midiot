@@ -81,6 +81,11 @@ public enum Drill: Hashable, Sendable, Codable {
         }
     }
 
+    /// True for a drill written for the left hand only.
+    public var isForLeftHandAlone: Bool {
+        if case .bassReading = self { true } else { false }
+    }
+
     /// Every drill on offer, grouped as the path presents them.
     public static var catalog: [Drill] {
         MusicKey.drillKeys.map(Drill.scale)

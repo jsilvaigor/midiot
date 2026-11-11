@@ -35,6 +35,11 @@ Differences from the plan:
 - **Lead sheet:** one chord symbol per bar at most, taken from the notes sounding in that bar. Bars whose notes form no recognizable chord get none.
 - **Hands in exports:** notes below middle C are written on the bass staff.
 
+Added after the first review:
+
+- **Keyboard on the Sketchpad:** the on-screen keyboard sits above the capture bar. Pointing at a suggested chord lights its keys, bass note in blue and chord in amber, placed to fit the connected keyboard; clicking plays it and keeps it lit.
+- **Chords** (under Learn): a cheat sheet of twenty chord types on any root, each with its keys, spelled notes, formula, right-hand fingering and character, in root position or any inversion, plus the chords that belong to the root's major and minor keys.
+
 ## Out of scope
 
 Live mode, pad and knob control, and the stage screen (milestone 4). Audio rendering, piano-roll sequencing and mixing stay out, as in the requirements.

@@ -59,9 +59,12 @@ public struct ScoreView: View {
         return ScoreCanvas(scene: scene, ink: ink, noteColors: noteColors)
             .background(alignment: .topLeading) { loopShading(page: index, scale: scale) }
             .overlay {
-                TimelineView(.animation) { _ in
+                TimelineView(.animation) { timeline in
+                    // Read per tick, so the cursor is redrawn every frame.
+                    let beat = position()
                     Canvas { context, _ in
-                        guard let cursor = layout.position(atBeat: position()), cursor.page == index else { return }
+                        _ = timeline.date
+                        guard let cursor = layout.position(atBeat: beat), cursor.page == index else { return }
                         let line = CGRect(x: cursor.x * scale - 1, y: cursor.top * scale,
                                           width: 2, height: (cursor.bottom - cursor.top) * scale)
                         var glow = context
