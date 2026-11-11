@@ -29,7 +29,7 @@ import Testing
     @Test func otherKeysUseTheirOwnNotesAndFingering() {
         #expect(pitches(Drill.scale(.d).song(title: ""), .right).prefix(8) == [62, 64, 66, 67, 69, 71, 73, 74])
         // Harmonic minor: raised seventh.
-        #expect(pitches(Drill.scale(.aMinor).song(title: ""), .right).prefix(8) == [69, 71, 72, 74, 76, 77, 80, 81])
+        #expect(pitches(Drill.scale(.aMinor).song(title: ""), .right).prefix(8) == [57, 59, 60, 62, 64, 65, 68, 69])
         let f = Drill.scale(.f).song(title: "").notes.filter { $0.hand == .right }.sorted { $0.start < $1.start }
         #expect(f.prefix(8).map(\.finger) == [1, 2, 3, 4, 1, 2, 3, 4])
     }

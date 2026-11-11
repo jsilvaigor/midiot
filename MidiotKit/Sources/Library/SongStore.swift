@@ -23,6 +23,21 @@ public struct SongEntry: Identifiable, Codable, Hashable, Sendable {
     /// Length at the song's own tempo, to the end of the last bar.
     public let durationSeconds: Double
 
+    public init(
+        id: UUID, title: String, addedAt: Date, format: Format, fileName: String,
+        noteCount: Int, lowestPitch: Int, highestPitch: Int, durationSeconds: Double
+    ) {
+        self.id = id
+        self.title = title
+        self.addedAt = addedAt
+        self.format = format
+        self.fileName = fileName
+        self.noteCount = noteCount
+        self.lowestPitch = lowestPitch
+        self.highestPitch = highestPitch
+        self.durationSeconds = durationSeconds
+    }
+
     /// Whether the song fits on a keyboard of this size (requirement HW-3).
     public func fits(_ range: KeyboardRange) -> Bool {
         range.canPlay(lowest: Pitch(midiNumber: lowestPitch), highest: Pitch(midiNumber: highestPitch))

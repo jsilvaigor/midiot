@@ -1,4 +1,5 @@
 import DesignSystem
+import Library
 import MusicCore
 import Notation
 import SwiftUI
@@ -58,7 +59,7 @@ struct PracticeView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: session.song.title).font(.displayTitle).foregroundStyle(Palette.textPrimary).lineLimit(1)
                 HStack(spacing: 6) {
-                    Text(verbatim: session.loaded.entry.format == .midi ? "MIDI" : "MusicXML")
+                    formatLabel(session.loaded.entry.format)
                     Text(verbatim: "·")
                     Text("\(session.song.measures.count) bars")
                     if let folded = session.foldedRange {
@@ -78,6 +79,14 @@ struct PracticeView: View {
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 16)
+    }
+
+    private func formatLabel(_ format: SongEntry.Format) -> Text {
+        switch format {
+        case .midi: Text(verbatim: "MIDI")
+        case .musicXML: Text(verbatim: "MusicXML")
+        case .drill: Text("Drill")
+        }
     }
 
     private func sheet(_ session: PracticeSession) -> some View {

@@ -139,6 +139,10 @@ public enum Drill: Hashable, Sendable, Codable {
         base + (key.tonic + 12 - base % 12) % 12
     }
 
+    /// Where the right hand starts: the tonic nearest middle C, from the A below it upward.
+    /// The left hand plays an octave lower, which keeps both hands near their staves.
+    private static func rightTonic(_ key: MusicKey) -> Int { tonic(key, from: 57) }
+
     /// Right- and left-hand fingering for one octave up, by key.
     private static func scaleFingering(_ key: MusicKey) -> (right: [Int], left: [Int]) {
         switch (key.tonic, key.isMinor) {
@@ -152,7 +156,7 @@ public enum Drill: Hashable, Sendable, Codable {
         let degrees = key.scaleSteps + [12]
         let up = Array(degrees.indices), order = up + up.dropLast().reversed()
         let fingering = scaleFingering(key)
-        let right = tonic(key, from: 60), left = tonic(key, from: 48)
+        let right = rightTonic(key), left = right - 12
         for (step, degree) in order.enumerated() {
             // The last note is held to fill the bar.
             let length = step == order.count - 1 ? 2.0 : 1.0
@@ -166,7 +170,7 @@ public enum Drill: Hashable, Sendable, Codable {
         let tones = [0, third, 7, 12]
         let order = [0, 1, 2, 3, 2, 1, 0]
         let rightFingers = [1, 2, 3, 5], leftFingers = [5, third == 4 ? 4 : 3, 2, 1]
-        let right = tonic(key, from: 60), left = tonic(key, from: 48)
+        let right = rightTonic(key), left = right - 12
         for (step, tone) in order.enumerated() {
             let length = step == order.count - 1 ? 2.0 : 1.0
             builder.add(right + tones[tone], at: Double(step), length: length, hand: .right, finger: rightFingers[tone])
@@ -176,7 +180,7 @@ public enum Drill: Hashable, Sendable, Codable {
 
     private static func inversions(_ key: MusicKey, into builder: inout Builder) {
         let third = key.scaleSteps[2]
-        let root = tonic(key, from: 60)
+        let root = rightTonic(key)
         let shapes: [(notes: [Int], fingers: [Int])] = [
             ([0, third, 7], [1, 3, 5]), ([third, 7, 12], [1, 2, 5]), ([7, 12, 12 + third], [1, 3, 5]), ([12, 12 + third, 19], [1, 3, 5]),
         ]
@@ -188,12 +192,12 @@ public enum Drill: Hashable, Sendable, Codable {
                 builder.add(root + note, at: Double(step) * 2, length: length, hand: .right, finger: finger)
             }
         }
-        for bar in 0..<4 { builder.add(tonic(key, from: 36), at: Double(bar) * 4, length: 4, hand: .left, finger: 5) }
+        for bar in 0..<4 { builder.add(root - 24, at: Double(bar) * 4, length: 4, hand: .left, finger: 5) }
     }
 
     private static func cadence(_ key: MusicKey, into builder: inout Builder) {
         let steps = key.scaleSteps
-        let root = tonic(key, from: 60), bass = tonic(key, from: 48)
+        let root = rightTonic(key), bass = root - 12
         let third = steps[2], sixth = steps[5]
         // Right hand: I (root position), IV (second inversion), V (first inversion), I.
         // The fifth degree's chord uses the raised seventh in minor, as the harmonic scale gives it.
@@ -254,7 +258,7 @@ public enum Drill: Hashable, Sendable, Codable {
 
     private static func fiveFinger(_ key: MusicKey, pattern: Int, into builder: inout Builder) {
         let steps = Array(key.scaleSteps.prefix(5))
-        let right = tonic(key, from: 60), left = tonic(key, from: 48)
+        let right = rightTonic(key), left = right - 12
         let line = [0, 1, 2, 3, 4, 3, 2, 1]
         for round in 0..<2 {
             for (index, degree) in line.enumerated() {

@@ -33,6 +33,8 @@ enum SnapshotMode {
         let model = AppModel(store: SongStore(root: storeRoot), seedsStarterSongs: false)
         model.start()
 
+        save(RootView(), model: model, to: folder.appendingPathComponent("today-first.png"))
+        model.section = .library
         save(RootView(), model: model, to: folder.appendingPathComponent("library-empty.png"))
 
         model.importSongs(from: songs)
@@ -108,6 +110,17 @@ enum SnapshotMode {
 
         model.closeSong()
         save(RootView(), model: model, to: folder.appendingPathComponent("library-progress.png"))
+
+        // A drill opened from the path, shown as a sheet.
+        model.section = .today
+        model.open(.scale(.bFlat), title: "B♭ major scale")
+        await waitUntil { model.session?.loaded.entry.format == .drill }
+        UserDefaults.standard.set("split", forKey: "practiceViewMode")
+        model.session?.seek(to: 2)
+        save(RootView(), model: model, to: folder.appendingPathComponent("drill.png"))
+        UserDefaults.standard.removeObject(forKey: "practiceViewMode")
+        model.closeSong()
+        save(RootView(), model: model, to: folder.appendingPathComponent("today.png"))
         model.section = .settings
         save(RootView(), model: model, to: folder.appendingPathComponent("settings.png"))
     }
