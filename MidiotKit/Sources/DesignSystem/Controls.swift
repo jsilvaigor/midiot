@@ -36,8 +36,9 @@ public struct SegmentedControl<Value: Hashable>: View {
                         Text(option.title)
                             .font(.sans(13, weight: isOn ? .medium : .regular))
                             .foregroundStyle(isOn ? Palette.textPrimary : Palette.textSecondary)
+                            .fixedSize()
                     }
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, 12)
                     .frame(height: 32)
                     .background(isOn ? Palette.control : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .contentShape(Rectangle())
@@ -115,12 +116,19 @@ public struct ToggleChip: View {
     private let title: Text
     private let systemImage: String?
     private let isOn: Bool
+    private let showsTitle: Bool
     private let action: () -> Void
 
-    public init(_ title: Text, systemImage: String? = nil, isOn: Bool, action: @escaping () -> Void) {
+    /// - Parameter showsTitle: false draws the icon alone; the title is then the tooltip and
+    ///   the spoken label.
+    public init(
+        _ title: Text, systemImage: String? = nil, isOn: Bool, showsTitle: Bool = true,
+        action: @escaping () -> Void
+    ) {
         self.title = title
         self.systemImage = systemImage
         self.isOn = isOn
+        self.showsTitle = showsTitle
         self.action = action
     }
 
@@ -130,10 +138,10 @@ public struct ToggleChip: View {
                 if let systemImage {
                     Image(systemName: systemImage).font(.system(size: 13, weight: .medium))
                 }
-                title.font(.sans(13, weight: isOn ? .medium : .regular))
+                if showsTitle { title.font(.sans(13, weight: isOn ? .medium : .regular)) }
             }
             .foregroundStyle(isOn ? Palette.accentHighlight : Palette.textSecondary)
-            .padding(.horizontal, 14)
+            .padding(.horizontal, showsTitle ? 14 : 12)
             .frame(height: 40)
             .background(isOn ? Palette.accentSoft : Palette.surfaceRaised.opacity(0.7),
                         in: RoundedRectangle(cornerRadius: 11, style: .continuous))
@@ -142,6 +150,8 @@ public struct ToggleChip: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(showsTitle ? Text(verbatim: "") : title)
+        .accessibilityLabel(title)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }

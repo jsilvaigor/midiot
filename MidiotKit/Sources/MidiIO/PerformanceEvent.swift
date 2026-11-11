@@ -1,3 +1,4 @@
+import Darwin
 import MusicCore
 
 /// Something the player did on a keyboard, stamped with the time it happened.
@@ -19,5 +20,14 @@ public struct PerformanceEvent: Hashable, Sendable {
         self.kind = kind
         self.hostTime = hostTime
         self.deviceID = deviceID
+    }
+
+    /// `hostTime` in seconds on the host clock, comparable with `DispatchTime` uptime.
+    /// Nil when the device gave no timestamp.
+    public var seconds: Double? {
+        guard hostTime > 0 else { return nil }
+        var timebase = mach_timebase_info_data_t()
+        mach_timebase_info(&timebase)
+        return Double(hostTime) * Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000
     }
 }

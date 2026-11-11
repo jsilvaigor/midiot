@@ -44,6 +44,23 @@ enum SnapshotMode {
             model.session?.seek(to: beat)
             try? await Task.sleep(for: .milliseconds(300))
             save(RootView(), model: model, to: folder.appendingPathComponent("practice.png"))
+
+            // Right hand in wait mode: play one correct key and hold one wrong key.
+            if let session = model.session {
+                session.handMode = .right
+                session.waitsForPlayer = true
+                session.countInIsOn = false
+                session.loopBars = 1...2
+                session.seek(to: 0)
+                session.togglePlay()
+                try? await Task.sleep(for: .milliseconds(300))
+                if let first = session.awaited.first { model.mouseDown(on: first.pitch); model.mouseUp(on: first.pitch) }
+                try? await Task.sleep(for: .milliseconds(900))
+                model.mouseDown(on: .middleC)
+                try? await Task.sleep(for: .milliseconds(200))
+                save(RootView(), model: model, to: folder.appendingPathComponent("practice-wait.png"))
+                model.mouseUp(on: .middleC)
+            }
         }
 
         model.closeSong()

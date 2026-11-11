@@ -62,8 +62,18 @@ public final class SongPlayer: Sendable {
         engine.withLock { $0.metronomeIsOn = isOn }
     }
 
-    public func setAudibleHands(_ hands: Set<Hand>) {
-        engine.withLock { $0.audibleHands = hands }
+    public func setPlayerHands(_ hands: Set<Hand>) {
+        engine.withLock { $0.playerHands = hands }
+    }
+
+    public func setWaitsForPlayer(_ waits: Bool) {
+        engine.withLock { $0.waitsForPlayer = waits }
+    }
+
+    /// Reports a key press by the player. Safe to call from the MIDI thread.
+    /// - Parameter time: when the key was pressed, in host-clock seconds; nil means now.
+    public func playerPressed(_ pitch: Pitch, at time: Double? = nil) {
+        send(engine.withLock { $0.playerPressed(pitch, at: time ?? Self.now) })
     }
 
     private func tick() {

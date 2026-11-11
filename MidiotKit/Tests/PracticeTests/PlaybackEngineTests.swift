@@ -24,6 +24,11 @@ import Testing
             case let .click(isDownbeat): isDownbeat ? "CLICK" : "click"
             case .allNotesOff: "alloff"
             case .finished: "finished"
+            case let .judged(noteID, judgement): "\(judgement.rawValue)#\(noteID)"
+            case let .wrongKey(pitch): "wrong\(pitch.midiNumber)"
+            case let .waiting(notes): "wait" + notes.map { String($0.pitch.midiNumber) }.joined(separator: "+")
+            case .resumed: "resumed"
+            case .judgementsCleared: "cleared"
             }
         }
     }
@@ -69,16 +74,16 @@ import Testing
         engine.play(at: 0)
         #expect(pitches(engine.advance(to: 0)) == ["on60"])
         #expect(pitches(engine.advance(to: 1)) == ["off60", "on62"])
-        #expect(pitches(engine.advance(to: 2)) == ["alloff", "on60"])
+        #expect(pitches(engine.advance(to: 2)) == ["alloff", "cleared", "on60"])
         #expect(engine.beat(at: 2.5) == 0.5)
     }
 
     @Test func handsCanBeSilenced() {
         var engine = PlaybackEngine(song: Self.song)
-        engine.audibleHands = [.left]
+        engine.playerHands = [.right]
         engine.play(at: 0)
-        #expect(pitches(engine.advance(to: 3)) == [])
-        #expect(pitches(engine.advance(to: 4)) == ["on52"])
+        #expect(pitches(engine.advance(to: 0.2)) == [])
+        #expect(pitches(engine.advance(to: 4)) == ["on52", "missed#0", "missed#1"])
     }
 
     @Test func countInClicksBeforeTheMusic() {
@@ -97,9 +102,9 @@ import Testing
     @Test func metronomeMarksDownbeats() {
         var engine = PlaybackEngine(song: Self.song)
         engine.metronomeIsOn = true
-        engine.audibleHands = []
+        engine.playerHands = [.left, .right]
         engine.play(at: 0)
-        let clicks = (0...5).flatMap { pitches(engine.advance(to: Double($0))) }
+        let clicks = (0...5).flatMap { pitches(engine.advance(to: Double($0))) }.filter { $0.lowercased() == "click" }
         #expect(clicks == ["CLICK", "click", "click", "click", "CLICK", "click"])
     }
 
@@ -107,7 +112,84 @@ import Testing
         var engine = PlaybackEngine(song: Self.song)
         engine.play(at: 0)
         _ = engine.advance(to: 0)
-        #expect(pitches(engine.seek(to: 4, at: 0.5)) == ["alloff"])
+        #expect(pitches(engine.seek(to: 4, at: 0.5)) == ["alloff", "cleared"])
         #expect(pitches(engine.advance(to: 0.5)) == ["on52"])
+    }
+
+    // MARK: Judging the player
+
+    @Test func timingIsJudged() {
+        var engine = PlaybackEngine(song: Self.song)
+        engine.playerHands = [.right]
+        engine.play(at: 0)
+        _ = engine.advance(to: 0)
+        // Note 0 is at 0 s, note 1 at 1 s.
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 60), at: 0.05)) == ["correct#0"])
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 62), at: 0.8)) == ["early#1"])
+        // Already judged, so a second press has nothing to match.
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 62), at: 1.0)) == ["wrong62"])
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 61), at: 1.0)) == ["wrong61"])
+    }
+
+    @Test func lateAndMissed() {
+        var engine = PlaybackEngine(song: Self.song)
+        engine.playerHands = [.right]
+        engine.play(at: 0)
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 60), at: 0.2)) == ["late#0"])
+        // Nothing pressed for note 1 (at 1 s); it is missed once the window has passed.
+        #expect(pitches(engine.advance(to: 1.2)) == [])
+        #expect(pitches(engine.advance(to: 1.4)) == ["missed#1"])
+    }
+
+    @Test func pressesAreIgnoredWhenTheAppPlaysEverything() {
+        var engine = PlaybackEngine(song: Self.song)
+        engine.play(at: 0)
+        #expect(engine.playerPressed(Pitch(midiNumber: 60), at: 0).isEmpty)
+    }
+
+    @Test func waitModeHoldsUntilTheNoteIsPlayed() {
+        var engine = PlaybackEngine(song: Self.song)
+        engine.playerHands = [.right]
+        engine.waitsForPlayer = true
+        engine.play(at: 0)
+        #expect(pitches(engine.advance(to: 0)) == ["wait60"])
+        #expect(engine.isWaiting)
+        // Time passes, the music does not.
+        #expect(pitches(engine.advance(to: 5)) == [])
+        #expect(engine.beat(at: 5) == 0)
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 61), at: 5)) == ["wrong61"])
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 60), at: 6)) == ["correct#0", "resumed"])
+        #expect(engine.beat(at: 6.5) == 0.5)
+        #expect(pitches(engine.advance(to: 7)) == ["wait62"])
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 62), at: 7)) == ["correct#1", "resumed"])
+        // The left hand is the app's: it plays at beat 4, three beats later.
+        #expect(pitches(engine.advance(to: 10)) == ["on52"])
+    }
+
+    @Test func waitModeNeedsEveryNoteOfAChord() {
+        let chord = Song(
+            title: "C",
+            notes: [60, 64, 67].map { Note(id: 0, pitch: Pitch(midiNumber: $0), start: 1, duration: 1, hand: .right) },
+            tempoMap: TempoMap(bpm: 60), measures: Song.evenMeasures(beatsPerMeasure: 4, covering: 4)
+        )
+        var engine = PlaybackEngine(song: chord)
+        engine.playerHands = [.right]
+        engine.waitsForPlayer = true
+        engine.play(at: 0)
+        // Pressed just before the chord arrives: counts.
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 60), at: 0.9)) == ["correct#0"])
+        #expect(pitches(engine.advance(to: 1)) == ["wait64+67"])
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 64), at: 2)) == ["correct#1"])
+        #expect(engine.isWaiting)
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 67), at: 3)) == ["correct#2", "resumed"])
+    }
+
+    @Test func seekingBackClearsJudgements() {
+        var engine = PlaybackEngine(song: Self.song)
+        engine.playerHands = [.right]
+        engine.play(at: 0)
+        _ = engine.playerPressed(Pitch(midiNumber: 60), at: 0)
+        #expect(pitches(engine.seek(to: 0, at: 0.5)) == ["cleared"])
+        #expect(pitches(engine.playerPressed(Pitch(midiNumber: 60), at: 0.5)) == ["correct#0"])
     }
 }

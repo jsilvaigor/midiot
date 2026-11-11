@@ -36,6 +36,15 @@ import Testing
         #expect(loaded.song.notes.map(\.pitch.midiNumber) == [60, 84])
         #expect(loaded.pages.isEmpty)
 
+        #expect(store.runs(for: entry).isEmpty)
+        let run = RunResult(
+            date: Date(timeIntervalSince1970: 1_000), rate: 0.6, hands: ["right"], usedWaitMode: true,
+            completed: true, correct: 2, early: 0, late: 0, missed: 0, wrongKeys: 1
+        )
+        try store.appendRun(run, for: entry)
+        try store.appendRun(run, for: entry)
+        #expect(store.runs(for: entry) == [run, run])
+
         try store.delete(entry)
         #expect(store.entries().isEmpty)
     }

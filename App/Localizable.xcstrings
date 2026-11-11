@@ -81,6 +81,36 @@
         }
       }
     },
+    "Bars %lld–%lld": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compassos %lld–%lld"
+          }
+        }
+      }
+    },
+    "Both": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambas"
+          }
+        }
+      }
+    },
+    "Both hands": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duas mãos"
+          }
+        }
+      }
+    },
     "Choose a song from the Library to start practicing.": {
       "localizations": {
         "pt-BR": {
@@ -161,6 +191,26 @@
         }
       }
     },
+    "From bar": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do compasso"
+          }
+        }
+      }
+    },
+    "Hands": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mãos"
+          }
+        }
+      }
+    },
     "Import": {
       "localizations": {
         "pt-BR": {
@@ -211,6 +261,26 @@
         }
       }
     },
+    "Left": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esquerda"
+          }
+        }
+      }
+    },
+    "Left hand": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mão esquerda"
+          }
+        }
+      }
+    },
     "Length": {
       "localizations": {
         "pt-BR": {
@@ -231,12 +301,52 @@
         }
       }
     },
+    "Listen": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvir"
+          }
+        }
+      }
+    },
+    "Listening": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvindo"
+          }
+        }
+      }
+    },
     "Loading…": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Carregando…"
+          }
+        }
+      }
+    },
+    "Loop": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repetir"
+          }
+        }
+      }
+    },
+    "Loop these bars": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repetir estes compassos"
           }
         }
       }
@@ -257,6 +367,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Metrônomo"
+          }
+        }
+      }
+    },
+    "Midiot plays both hands": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Midiot toca as duas mãos"
+          }
+        }
+      }
+    },
+    "Midiot plays the left hand for you": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Midiot toca a mão esquerda para você"
+          }
+        }
+      }
+    },
+    "Midiot plays the right hand for you": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Midiot toca a mão direita para você"
           }
         }
       }
@@ -361,6 +501,16 @@
         }
       }
     },
+    "Play the highlighted keys": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque as teclas destacadas"
+          }
+        }
+      }
+    },
     "Practice": {
       "localizations": {
         "pt-BR": {
@@ -377,6 +527,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recomeçar"
+          }
+        }
+      }
+    },
+    "Right": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direita"
+          }
+        }
+      }
+    },
+    "Right hand": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mão direita"
           }
         }
       }
@@ -441,12 +611,52 @@
         }
       }
     },
+    "To bar": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Até o compasso"
+          }
+        }
+      }
+    },
+    "Wait mode": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo de espera"
+          }
+        }
+      }
+    },
+    "Waiting for you": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando você"
+          }
+        }
+      }
+    },
     "Wider than 49": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Mais de 49"
+          }
+        }
+      }
+    },
+    "You play everything": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você toca tudo"
           }
         }
       }

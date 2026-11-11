@@ -65,7 +65,7 @@ struct PracticeView: View {
                 notes: session.song.notes.map { note in
                     FallingNote(
                         id: note.id, pitch: note.pitch, start: note.start, duration: note.duration,
-                        color: note.hand == .right ? Palette.handRight : Palette.handLeft,
+                        color: color(for: note, in: session),
                         label: note.finger.map(String.init)
                     )
                 },
@@ -73,16 +73,35 @@ struct PracticeView: View {
                 position: { session.beat }
             )
             .frame(minHeight: 240)
-            keyboard(range: range, sounding: session.sounding)
+            .overlay(alignment: .top) { StatusChip(session: session).padding(.top, 16) }
+            keyboard(range: range, sounding: session.sounding, session: session)
         }
         .frame(maxWidth: keyboardWidth(range))
         .padding(.horizontal, Spacing.l)
         .frame(maxWidth: .infinity)
     }
 
-    private func keyboard(range: KeyboardRange, sounding: [Pitch: Hand]) -> some View {
+    private func color(for note: Note, in session: PracticeSession) -> Color {
+        switch session.results[note.id] {
+        case .correct: Palette.noteCorrect
+        case .early: Palette.noteEarly
+        case .late: Palette.noteLate
+        case .missed: Palette.noteWrong.opacity(0.55)
+        case nil: note.hand == .right ? Palette.handRight : Palette.handLeft
+        }
+    }
+
+    private func keyboard(range: KeyboardRange, sounding: [Pitch: Hand], session: PracticeSession? = nil) -> some View {
         var highlights = sounding.mapValues { $0 == .right ? Palette.handRight : Palette.handLeft }
-        for pitch in model.pressed { highlights[pitch] = Palette.textPrimary.mix(with: Palette.accent, by: 0.5) }
+        // Keys wait mode is asking for: a soft version of the hand color.
+        for note in session?.awaited ?? [] {
+            highlights[note.pitch] = (note.hand == .right ? Palette.handRight : Palette.handLeft).opacity(0.5)
+        }
+        for pitch in model.pressed {
+            highlights[pitch] = session?.wrongKeys.contains(pitch) == true
+                ? Palette.noteWrong
+                : Palette.textPrimary.mix(with: Palette.accent, by: 0.5)
+        }
         return KeyboardView(
             range: range, highlights: highlights, naming: naming,
             onPress: model.mouseDown(on:), onRelease: model.mouseUp(on:)
@@ -112,9 +131,32 @@ struct PracticeView: View {
 /// Play controls, position readout, tempo and metronome.
 private struct TransportBar: View {
     @Bindable var session: PracticeSession
+    @State private var isEditingLoop = false
+    @State private var loopFrom = 1
+    @State private var loopTo = 4
 
     var body: some View {
-        HStack(spacing: 22) {
+        // One row when the window is wide enough, two when it is not.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 18) {
+                playback
+                Spacer(minLength: 0)
+                practice
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                playback
+                practice
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.surface)
+    }
+
+    /// Transport, position, tempo and metronome.
+    private var playback: some View {
+        HStack(spacing: 18) {
             HStack(spacing: 10) {
                 IconButton(systemImage: "backward.end.fill", label: "Restart") { session.restart() }
                 PlayButton(isPlaying: session.isPlaying, label: session.isPlaying ? "Pause" : "Play") { session.togglePlay() }
@@ -123,17 +165,75 @@ private struct TransportBar: View {
             }
             Palette.hairlineStrong.frame(width: 1, height: 32)
             tempo
-            ToggleChip(Text("Metronome"), systemImage: "metronome", isOn: session.metronomeIsOn) {
-                session.metronomeIsOn.toggle()
+            HStack(spacing: 8) {
+                ToggleChip(Text("Metronome"), systemImage: "metronome", isOn: session.metronomeIsOn, showsTitle: false) {
+                    session.metronomeIsOn.toggle()
+                }
+                ToggleChip(Text("Count-in"), systemImage: "timer", isOn: session.countInIsOn, showsTitle: false) {
+                    session.countInIsOn.toggle()
+                }
             }
-            ToggleChip(Text("Count-in"), systemImage: "timer", isOn: session.countInIsOn) {
-                session.countInIsOn.toggle()
-            }
-            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 14)
-        .background(Palette.surface)
+        .fixedSize()
+    }
+
+    /// Who plays, wait mode and loop.
+    private var practice: some View {
+        HStack(spacing: 8) {
+            SegmentedControl(selection: $session.handMode, options: [
+                .init(.listen, "Listen"),
+                .init(.both, "Both"),
+                .init(.right, "Right", dot: Palette.handRight),
+                .init(.left, "Left", dot: Palette.handLeft),
+            ])
+            .accessibilityLabel(Text("Hands"))
+            ToggleChip(Text("Wait mode"), systemImage: "hourglass", isOn: session.waitsForPlayer, showsTitle: false) {
+                session.waitsForPlayer.toggle()
+            }
+            loop
+        }
+        .fixedSize()
+    }
+
+    private var loop: some View {
+        let lastBar = max(session.song.measures.count, 1)
+        let title = session.loopBars.map { Text("Bars \($0.lowerBound)–\($0.upperBound)") } ?? Text("Loop")
+        return ToggleChip(title, systemImage: "repeat", isOn: session.loopBars != nil) {
+            isEditingLoop = true
+        }
+        .popover(isPresented: $isEditingLoop, arrowEdge: .top) {
+            VStack(alignment: .leading, spacing: 14) {
+                Toggle("Loop these bars", isOn: Binding(
+                    get: { session.loopBars != nil },
+                    set: { session.loopBars = $0 ? loopFrom...max(loopFrom, loopTo) : nil }
+                ))
+                Stepper(value: $loopFrom, in: 1...lastBar) {
+                    Text("From bar") + Text(verbatim: "  \(loopFrom)").font(.readoutSmall)
+                }
+                Stepper(value: $loopTo, in: 1...lastBar) {
+                    Text("To bar") + Text(verbatim: "  \(loopTo)").font(.readoutSmall)
+                }
+            }
+            .padding(18)
+            .frame(width: 240)
+            .onChange(of: loopFrom) { updateLoop(lastBar: lastBar) }
+            .onChange(of: loopTo) { updateLoop(lastBar: lastBar) }
+            .onAppear {
+                if let bars = session.loopBars {
+                    loopFrom = bars.lowerBound
+                    loopTo = bars.upperBound
+                } else {
+                    // Start from the bar being played, four bars long.
+                    loopFrom = session.song.measure(atBeat: max(session.beat, 0))?.number ?? 1
+                    loopTo = min(loopFrom + 3, lastBar)
+                }
+            }
+        }
+    }
+
+    private func updateLoop(lastBar: Int) {
+        if loopTo < loopFrom { loopTo = loopFrom }
+        if session.loopBars != nil { session.loopBars = loopFrom...min(loopTo, lastBar) }
     }
 
     private var readout: some View {
@@ -155,9 +255,8 @@ private struct TransportBar: View {
 
     private var tempo: some View {
         HStack(spacing: 12) {
-            Text("Tempo").capsLabel()
             Slider(value: $session.rate, in: 0.25...1.5, step: 0.05)
-                .frame(width: 150)
+                .frame(width: 110)
                 .accessibilityLabel(Text("Tempo"))
             let bpm = session.song.tempoMap.bpm(atBeat: max(session.beat, 0)) * session.rate
             Text(verbatim: "\(Int((session.rate * 100).rounded()))% · \(Int(bpm.rounded()))")
@@ -165,6 +264,34 @@ private struct TransportBar: View {
                 .foregroundStyle(Palette.textPrimary)
                 .frame(width: 84, alignment: .leading)
         }
+    }
+}
+
+/// Floating chip over the lane saying who is playing, or that the music is waiting.
+private struct StatusChip: View {
+    let session: PracticeSession
+
+    var body: some View {
+        let isWaiting = !session.awaited.isEmpty
+        let (title, detail, color): (LocalizedStringKey, LocalizedStringKey, Color) = if isWaiting {
+            ("Waiting for you", "Play the highlighted keys", Palette.accent)
+        } else {
+            switch session.handMode {
+            case .listen: ("Listening", "Midiot plays both hands", Palette.textPrimary)
+            case .both: ("Both hands", "You play everything", Palette.textPrimary)
+            case .right: ("Right hand", "Midiot plays the left hand for you", Palette.handRight)
+            case .left: ("Left hand", "Midiot plays the right hand for you", Palette.handLeft)
+            }
+        }
+        HStack(spacing: 10) {
+            Circle().fill(color).frame(width: 8, height: 8).filamentGlow(color, radius: 5)
+            Text(title).font(.sans(13, weight: .medium)).foregroundStyle(Palette.textPrimary)
+            Text(detail).font(.sans(13)).foregroundStyle(Palette.textSecondary)
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 16)
+        .padding(.vertical, 9)
+        .glassPanel(cornerRadius: 999)
     }
 }
 

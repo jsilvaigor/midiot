@@ -5,7 +5,9 @@ import MidiIO
 import MusicCore
 import Observation
 import Sound
+import Practice
 import SwiftUI
+import Synchronization
 
 /// App-wide state: connected keyboards, the piano sound, and which keys are down.
 @MainActor
@@ -36,6 +38,9 @@ final class AppModel {
     @ObservationIgnored private let piano = SamplerInstrument()
     @ObservationIgnored private let clicks = SamplerInstrument()
     @ObservationIgnored private let store: SongStore
+    /// The open song's player, reachable from the MIDI thread so key presses are judged
+    /// with their exact time.
+    @ObservationIgnored private let activePlayer = PlayerBox()
 
     init(store: SongStore = .standard) {
         self.store = store
@@ -72,10 +77,12 @@ final class AppModel {
             await MainActor.run { self.soundStatus = status }
         }
 
-        devices.start { [piano, weak self] event in
+        devices.start { [piano, activePlayer, weak self] event in
             // On the MIDI thread: make sound first, then tell the interface.
             switch event.kind {
-            case let .noteOn(pitch, velocity): piano.noteOn(pitch, velocity: velocity)
+            case let .noteOn(pitch, velocity):
+                piano.noteOn(pitch, velocity: velocity)
+                activePlayer.player?.playerPressed(pitch, at: event.seconds)
             case let .noteOff(pitch): piano.noteOff(pitch)
             case let .sustain(isDown): piano.setSustain(isDown)
             }
@@ -132,7 +139,16 @@ final class AppModel {
             do {
                 let loaded = try await Task.detached(priority: .userInitiated) { try store.load(entry) }.value
                 session?.stop()
-                session = PracticeSession(loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks)
+                let new = PracticeSession(loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks) { run in
+                    try? store.appendRun(run, for: entry)
+                }
+                // With a keyboard connected, start in the mode a learner wants: play it yourself, unhurried.
+                if !devices.devices.isEmpty {
+                    new.handMode = .both
+                    new.waitsForPlayer = true
+                }
+                session = new
+                activePlayer.player = new.player
                 section = .practice
             } catch {
                 libraryError = "\(entry.title): \(error.localizedDescription)"
@@ -143,6 +159,7 @@ final class AppModel {
     func closeSong() {
         session?.stop()
         session = nil
+        activePlayer.player = nil
         section = .library
     }
 
@@ -151,11 +168,13 @@ final class AppModel {
     func mouseDown(on pitch: Pitch) {
         piano.noteOn(pitch, velocity: 90)
         pressed.insert(pitch)
+        session?.player.playerPressed(pitch)
     }
 
     func mouseUp(on pitch: Pitch) {
         piano.noteOff(pitch)
         pressed.remove(pitch)
+        session?.released(pitch)
     }
 
     private func show(_ event: PerformanceEvent) {
@@ -166,8 +185,19 @@ final class AppModel {
             range = range.shifted(toContain: pitch)
         case let .noteOff(pitch):
             pressed.remove(pitch)
+            session?.released(pitch)
         case .sustain:
             break
         }
+    }
+}
+
+/// Holds the current song player where the MIDI thread can read it.
+private final class PlayerBox: Sendable {
+    private let storage = Mutex<SongPlayer?>(nil)
+
+    var player: SongPlayer? {
+        get { storage.withLock { $0 } }
+        set { storage.withLock { $0 = newValue } }
     }
 }

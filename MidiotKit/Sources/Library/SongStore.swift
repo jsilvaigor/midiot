@@ -27,6 +27,39 @@ public struct SongEntry: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// The outcome of one practice run, kept per song so progress can be shown later.
+public struct RunResult: Codable, Hashable, Sendable {
+    public let date: Date
+    /// Playback speed as a fraction of the song's tempo.
+    public let rate: Double
+    /// Hands the player played: "left", "right".
+    public let hands: [String]
+    public let usedWaitMode: Bool
+    /// True when the run reached the end of the song.
+    public let completed: Bool
+    public let correct: Int
+    public let early: Int
+    public let late: Int
+    public let missed: Int
+    public let wrongKeys: Int
+
+    public init(
+        date: Date, rate: Double, hands: [String], usedWaitMode: Bool, completed: Bool,
+        correct: Int, early: Int, late: Int, missed: Int, wrongKeys: Int
+    ) {
+        self.date = date
+        self.rate = rate
+        self.hands = hands
+        self.usedWaitMode = usedWaitMode
+        self.completed = completed
+        self.correct = correct
+        self.early = early
+        self.late = late
+        self.missed = missed
+        self.wrongKeys = wrongKeys
+    }
+}
+
 /// A song opened for practice.
 public struct LoadedSong: Sendable {
     public let entry: SongEntry
@@ -104,6 +137,18 @@ public struct SongStore: Sendable {
         let data = try Data(contentsOf: folder(for: entry).appendingPathComponent(entry.fileName))
         let parsed = try Self.parse(data, format: entry.format, title: entry.title)
         return LoadedSong(entry: entry, song: parsed.song, pages: parsed.pages)
+    }
+
+    /// Adds a run to the song's history (`runs.json` in its folder).
+    public func appendRun(_ run: RunResult, for entry: SongEntry) throws {
+        let all = runs(for: entry) + [run]
+        try Self.encoder.encode(all).write(to: folder(for: entry).appendingPathComponent("runs.json"))
+    }
+
+    /// The song's practice history, oldest first.
+    public func runs(for entry: SongEntry) -> [RunResult] {
+        guard let data = try? Data(contentsOf: folder(for: entry).appendingPathComponent("runs.json")) else { return [] }
+        return (try? Self.decoder.decode([RunResult].self, from: data)) ?? []
     }
 
     public func delete(_ entry: SongEntry) throws {
