@@ -47,6 +47,27 @@ struct SettingsView: View {
             }
 
             Section {
+                Picker("Send to", selection: Binding(get: { model.midiOut }, set: { model.setMIDIOut($0) })) {
+                    Text("Off (MIDI out)").tag(MIDIOutChoice.off)
+                    Text("Other apps, as a port named Midiot").tag(MIDIOutChoice.otherApps)
+                    ForEach(model.devices.destinations) { destination in
+                        Text(verbatim: destination.name).tag(MIDIOutChoice.destination(id: destination.id, name: destination.name))
+                    }
+                    // The chosen one stays listed while it is unplugged.
+                    if case let .destination(id, name) = model.midiOut, !model.devices.destinations.contains(where: { $0.id == id }) {
+                        Text("\(name) (not connected)").tag(model.midiOut)
+                    }
+                }
+                Toggle("Silence Midiot's own instruments", isOn: $model.mutesOwnSound)
+                    .disabled(model.midiOut == .off)
+            } header: {
+                Text("MIDI out")
+            } footer: {
+                Text("Everything Midiot plays is sent as well: the piano and the Sketchpad's sound on channel 1, recorded layers on channels 2 to 9, and the Stage's sounds on channels 12 and 13. The metronome is not sent.")
+                    .font(.sans(12)).foregroundStyle(Palette.textSecondary)
+            }
+
+            Section {
                 ForEach(ControlAction.Context.allCases, id: \.self) { context in
                     Text(ControlNames.context(context)).capsLabel().padding(.top, 6)
                     ForEach(ControlAction.allCases.filter { $0.context == context }, id: \.self) { action in

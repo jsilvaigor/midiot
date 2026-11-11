@@ -38,6 +38,15 @@ final class AppModel {
     }
     /// The action waiting for a pad or knob to be touched, while MIDI learn is on.
     var learning: ControlAction?
+    /// Where the app also sends what it plays (requirement SN-3).
+    private(set) var midiOut = MIDIOutChoice.off
+    /// With MIDI out on: keep the app's own instruments quiet so only the other one is heard.
+    var mutesOwnSound = UserDefaults.standard.bool(forKey: "midiOutMutes") {
+        didSet {
+            UserDefaults.standard.set(mutesOwnSound, forKey: "midiOutMutes")
+            applyMIDIOut()
+        }
+    }
     /// Loudness of everything, 0 to 1; a knob can set it.
     private(set) var volume = 1.0
     /// Minutes practiced per day and what was played through (requirement CU-6).
@@ -169,11 +178,74 @@ final class AppModel {
             Task { @MainActor in self?.handle(event) }
         }
         followPadLights()
+        if let saved = UserDefaults.standard.data(forKey: "midiOut").flatMap({ try? JSONDecoder().decode(MIDIOutChoice.self, from: $0) }) {
+            setMIDIOut(saved)
+        }
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [devices] _ in
-            MainActor.assumeIsolated { devices.releasePadLights() }
+            MainActor.assumeIsolated {
+                devices.releasePadLights()
+                devices.out.silence()
+            }
         }
+    }
+
+    // MARK: MIDI out (requirement SN-3)
+
+    /// Sends everything the app plays somewhere else as well: the piano on channel 1, the
+    /// other sounds on the channels they use here. The metronome stays in the app.
+    func setMIDIOut(_ choice: MIDIOutChoice) {
+        midiOut = choice
+        UserDefaults.standard.set(try? JSONEncoder().encode(choice), forKey: "midiOut")
+        devices.setOutput(choice)
+        applyMIDIOut()
+        // A port that was only just opened can miss the sounds chosen so far; say them again.
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard let self, self.midiOut == choice else { return }
+            self.applyMIDIOut()
+        }
+    }
+
+    private func applyMIDIOut() {
+        let isOn = midiOut != .off
+        piano.isMuted = isOn && mutesOwnSound
+        palette.isMuted = isOn && mutesOwnSound
+        guard isOn else {
+            piano.mirror(to: nil)
+            palette.mirror(to: nil)
+            return
+        }
+        let out = devices.out
+        // The piano and the Sketchpad's sound share channel 1. The other end is told which of
+        // the two is about to play whenever it changes: `wanted` is the Sketchpad's sound,
+        // `sent` the one the other end has now.
+        let channelOne = Mutex<(wanted: Int?, sent: Int?)>((nil, nil))
+        @Sendable func choose(_ program: Int) {
+            let isNew = channelOne.withLock { state -> Bool in
+                defer { state.sent = program }
+                return state.sent != program
+            }
+            if isNew { out.program(program, channel: 0) }
+        }
+        @Sendable func send(_ message: ChannelMessage, isPiano: Bool) {
+            switch message {
+            case let .noteOn(note, velocity, channel):
+                if channel == 0 {
+                    if isPiano { choose(0) } else if let wanted = channelOne.withLock({ $0.wanted }) { choose(wanted) }
+                }
+                out.noteOn(note, velocity: velocity, channel: channel)
+            case let .noteOff(note, channel): out.noteOff(note, channel: channel)
+            case let .controller(number, value, channel): out.controller(number, value: value, channel: channel)
+            case let .program(program, channel):
+                guard channel == 0 else { return out.program(program, channel: channel) }
+                channelOne.withLock { $0.wanted = program }
+                choose(program)
+            }
+        }
+        piano.mirror(to: { send($0, isPiano: true) }, channel: 0)
+        palette.mirror(to: { send($0, isPiano: false) })
     }
 
     /// Call when the set of connected keyboards changes.

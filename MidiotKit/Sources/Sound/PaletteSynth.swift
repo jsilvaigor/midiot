@@ -9,6 +9,7 @@ public final class PaletteSynth: @unchecked Sendable {
     let node: AVAudioUnitMIDIInstrument
     /// Program selected on each channel, to skip reloading a sound that is already there.
     private let programs = Mutex<[Int: Int]>([:])
+    private let copies = MIDIMirror()
 
     public init() {
         node = AVAudioUnitMIDIInstrument(audioComponentDescription: AudioComponentDescription(
@@ -46,6 +47,7 @@ public final class PaletteSynth: @unchecked Sendable {
             return true
         }
         guard isNew else { return }
+        copies.send(.program(program, channel: channel))
         // The synth reads a sound's samples only while preloading is switched on.
         setPreload(true)
         node.sendProgramChange(UInt8(program), onChannel: UInt8(channel))
@@ -67,11 +69,28 @@ public final class PaletteSynth: @unchecked Sendable {
     public func setVolume(_ level: Double, channel: Int) {
         let value = UInt8((min(max(level, 0), 1) * 127).rounded())
         node.sendController(7, withValue: value, onChannel: UInt8(min(max(channel, 0), 15)))
+        copies.send(.controller(number: 7, value: Int(value), channel: min(max(channel, 0), 15)))
     }
 
     /// The instrument that plays on one channel.
     public func voice(channel: Int) -> any Instrument {
-        Voice(node: node, channel: UInt8(min(max(channel, 0), 15)))
+        Voice(node: node, channel: UInt8(min(max(channel, 0), 15)), mirror: copies)
+    }
+
+    /// Copies everything the synth plays to `sink`, on the same channels, starting with the
+    /// sound already chosen on each channel. Nil stops copying.
+    public func mirror(to sink: (@Sendable (ChannelMessage) -> Void)?) {
+        copies.set(sink)
+        guard let sink else { return }
+        for (channel, program) in programs.withLock({ $0 }).sorted(by: { $0.key < $1.key }) {
+            sink(.program(program, channel: channel))
+        }
+    }
+
+    /// Silences the synth's own sound without stopping what it copies out.
+    public var isMuted: Bool {
+        get { node.volume == 0 }
+        set { node.volume = newValue ? 0 : 1 }
     }
 
     /// Silences every channel.
@@ -82,30 +101,40 @@ public final class PaletteSynth: @unchecked Sendable {
     private final class Voice: Instrument, @unchecked Sendable {
         let node: AVAudioUnitMIDIInstrument
         let channel: UInt8
+        let copies: MIDIMirror
 
-        init(node: AVAudioUnitMIDIInstrument, channel: UInt8) {
+        init(node: AVAudioUnitMIDIInstrument, channel: UInt8, mirror: MIDIMirror) {
             self.node = node
             self.channel = channel
+            self.copies = mirror
         }
 
         func noteOn(_ pitch: Pitch, velocity: Int) {
             guard let note = UInt8(exactly: pitch.midiNumber), note < 128 else { return }
-            node.startNote(note, withVelocity: UInt8(min(max(velocity, 1), 127)), onChannel: channel)
+            let velocity = UInt8(min(max(velocity, 1), 127))
+            node.startNote(note, withVelocity: velocity, onChannel: channel)
+            copies.send(.noteOn(note: Int(note), velocity: Int(velocity), channel: Int(channel)))
         }
 
         func noteOff(_ pitch: Pitch) {
             guard let note = UInt8(exactly: pitch.midiNumber), note < 128 else { return }
             node.stopNote(note, onChannel: channel)
+            copies.send(.noteOff(note: Int(note), channel: Int(channel)))
         }
 
         func setSustain(_ isDown: Bool) {
-            node.sendController(64, withValue: isDown ? 127 : 0, onChannel: channel)
+            control(64, isDown ? 127 : 0)
         }
 
         func allNotesOff() {
-            node.sendController(64, withValue: 0, onChannel: channel)
-            node.sendController(123, withValue: 0, onChannel: channel)
-            node.sendController(120, withValue: 0, onChannel: channel)
+            control(64, 0)
+            control(123, 0) // all notes off
+            control(120, 0) // all sound off
+        }
+
+        private func control(_ number: UInt8, _ value: UInt8) {
+            node.sendController(number, withValue: value, onChannel: channel)
+            copies.send(.controller(number: Int(number), value: Int(value), channel: Int(channel)))
         }
     }
 }

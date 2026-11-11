@@ -2,6 +2,16 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {},
+    "%@ (not connected)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (desconectado)"
+          }
+        }
+      }
+    },
     "%@ + %@" : {
       "localizations" : {
         "pt-BR" : {
@@ -1403,6 +1413,16 @@
         }
       }
     },
+    "Everything Midiot plays is sent as well: the piano and the Sketchpad's sound on channel 1, recorded layers on channels 2 to 9, and the Stage's sounds on channels 12 and 13. The metronome is not sent." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tudo o que o Midiot toca também é enviado: o piano e o som dos Rascunhos no canal 1, as camadas gravadas nos canais 2 a 9 e os sons do Palco nos canais 12 e 13. O metrônomo não é enviado."
+          }
+        }
+      }
+    },
     "Everywhere" : {
       "localizations" : {
         "pt-BR" : {
@@ -2370,6 +2390,16 @@
         }
       }
     },
+    "MIDI out" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saída MIDI"
+          }
+        }
+      }
+    },
     "Midiot already allows for the output delay. Raise this if notes you play on time are marked late; lower it if they are marked early." : {
       "localizations" : {
         "pt-BR" : {
@@ -2887,6 +2917,22 @@
         }
       }
     },
+    "Off (MIDI out)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desligada"
+          }
+        }
+      }
+    },
     "On stage" : {
       "localizations" : {
         "pt-BR" : {
@@ -2993,6 +3039,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abre"
+          }
+        }
+      }
+    },
+    "Other apps, as a port named Midiot" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outros apps, por uma porta chamada Midiot"
           }
         }
       }
@@ -3643,6 +3699,16 @@
         }
       }
     },
+    "Send to" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar para"
+          }
+        }
+      }
+    },
     "Settings" : {
       "localizations" : {
         "pt-BR" : {
@@ -3679,6 +3745,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Partitura"
+          }
+        }
+      }
+    },
+    "Silence Midiot's own instruments" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silenciar os instrumentos do próprio Midiot"
           }
         }
       }
