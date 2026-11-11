@@ -22,7 +22,9 @@ final class AppModel {
     let devices = DeviceManager()
     var section = AppSection.library
     /// Songs in the library, newest first.
-    private(set) var songs: [SongEntry] = []
+    private(set) var songs: [SongEntry] = [] { didSet { refreshProgress() } }
+    /// Best accuracy and last practice date per song, for the library table.
+    private(set) var progress: [UUID: (best: Double?, last: Date)] = [:]
     /// The song open on the Practice screen.
     private(set) var session: PracticeSession?
     /// Why the last import or open failed; shown until dismissed.
@@ -177,9 +179,14 @@ final class AppModel {
                     foldedRange = target
                 }
                 session?.stop()
-                let new = PracticeSession(loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks) { run in
-                    try? store.appendRun(run, for: entry)
-                }
+                let new = PracticeSession(
+                    loaded: loaded, piano: piano.voice(channel: 1), clicks: clicks,
+                    history: { store.runs(for: entry) },
+                    onRunEnded: { [weak self] run in
+                        try? store.appendRun(run, for: entry)
+                        self?.refreshProgress()
+                    }
+                )
                 // With a keyboard connected, start in the mode a learner wants: play it yourself, unhurried.
                 if !devices.devices.isEmpty {
                     new.handMode = .both
@@ -193,6 +200,17 @@ final class AppModel {
                 libraryError = "\(entry.title): \(error.localizedDescription)"
             }
         }
+    }
+
+    private func refreshProgress() {
+        var progress: [UUID: (best: Double?, last: Date)] = [:]
+        for entry in songs {
+            let runs = store.runs(for: entry)
+            guard let last = runs.last else { continue }
+            // Best counts whole-piece runs only; a perfect two-bar loop is not a best run.
+            progress[entry.id] = (runs.filter(\.completed).compactMap(\.accuracy).max(), last.date)
+        }
+        self.progress = progress
     }
 
     func closeSong() {

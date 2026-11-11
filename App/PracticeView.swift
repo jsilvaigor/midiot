@@ -19,7 +19,9 @@ struct PracticeView: View {
     private let maxWhiteKeyWidth: CGFloat = 44
 
     var body: some View {
-        if let session = model.session {
+        if let session = model.session, let review = session.review {
+            ReviewView(session: session, review: review)
+        } else if let session = model.session {
             VStack(spacing: 0) {
                 header(session)
                 Palette.hairline.frame(height: 1)
@@ -260,9 +262,12 @@ private struct TransportBar: View {
                 Stepper(value: $loopTo, in: 1...lastBar) {
                     Text("To bar") + Text(verbatim: "  \(loopTo)").font(.readoutSmall)
                 }
+                Toggle("Raise tempo as I improve", isOn: $session.adaptsTempo)
+                Text("Up 5% after three clean passes, down 5% after two poor ones.")
+                    .font(.sans(12)).foregroundStyle(Palette.textSecondary)
             }
             .padding(18)
-            .frame(width: 240)
+            .frame(width: 280)
             .onChange(of: loopFrom) { updateLoop(lastBar: lastBar) }
             .onChange(of: loopTo) { updateLoop(lastBar: lastBar) }
             .onAppear {

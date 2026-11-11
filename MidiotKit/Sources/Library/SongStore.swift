@@ -42,11 +42,19 @@ public struct RunResult: Codable, Hashable, Sendable {
     public let late: Int
     public let missed: Int
     public let wrongKeys: Int
+    /// Share of the player's notes that were played, 0...1. Missing in runs saved before
+    /// the review existed.
+    public let accuracy: Double?
+    /// Average signed timing offset in seconds; negative is early.
+    public let averageOffset: Double?
 
     public init(
         date: Date, rate: Double, hands: [String], usedWaitMode: Bool, completed: Bool,
-        correct: Int, early: Int, late: Int, missed: Int, wrongKeys: Int
+        correct: Int, early: Int, late: Int, missed: Int, wrongKeys: Int,
+        accuracy: Double? = nil, averageOffset: Double? = nil
     ) {
+        self.accuracy = accuracy
+        self.averageOffset = averageOffset
         self.date = date
         self.rate = rate
         self.hands = hands

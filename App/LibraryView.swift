@@ -95,9 +95,9 @@ struct LibraryView: View {
             } keys: {
                 Text("Keys").capsLabel()
             } length: {
-                Text("Length").capsLabel()
+                Text("Best run").capsLabel()
             } added: {
-                Text("Added").capsLabel()
+                Text("Last played").capsLabel()
             }
             .padding(.vertical, 12)
 
@@ -109,17 +109,22 @@ struct LibraryView: View {
                     row {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(verbatim: entry.title).font(.serif(21)).foregroundStyle(Palette.textPrimary).lineLimit(1)
-                            Text("\(entry.noteCount) notes").font(.sans(12)).foregroundStyle(Palette.textSecondary)
+                            (Text("\(entry.noteCount) notes") + Text(verbatim: " · " + Self.clock(entry.durationSeconds)))
+                                .font(.sans(12)).foregroundStyle(Palette.textSecondary)
                         }
                     } format: {
                         Pill(Text(verbatim: entry.format == .midi ? "MIDI" : "MusicXML"), tone: .blue)
                     } keys: {
                         keysPill(for: entry)
                     } length: {
-                        Text(verbatim: Self.clock(entry.durationSeconds)).font(.readoutSmall).foregroundStyle(Palette.textPrimary)
+                        bestRun(model.progress[entry.id]?.best ?? nil)
                     } added: {
-                        Text(entry.addedAt, format: .dateTime.day().month(.abbreviated))
-                            .font(.sans(13)).foregroundStyle(Palette.textSecondary)
+                        if let last = model.progress[entry.id]?.last {
+                            Text(last, format: .dateTime.day().month(.abbreviated))
+                                .font(.sans(13)).foregroundStyle(Palette.textSecondary)
+                        } else {
+                            Text(verbatim: "—").font(.sans(13)).foregroundStyle(Palette.textTertiary)
+                        }
                     }
                     .frame(minHeight: 64)
                     .contentShape(Rectangle())
@@ -132,6 +137,24 @@ struct LibraryView: View {
         }
         .background(Palette.surface.opacity(0.8), in: RoundedRectangle(cornerRadius: Radius.panel, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Radius.panel, style: .continuous).strokeBorder(Palette.hairline))
+    }
+
+    /// Best accuracy as a number and a short bar, green once it is 85% or better.
+    private func bestRun(_ best: Double?) -> some View {
+        HStack(spacing: 10) {
+            Text(verbatim: best.map { "\(Int(($0 * 100).rounded()))%" } ?? "—")
+                .font(.readoutSmall)
+                .foregroundStyle(best == nil ? Palette.textTertiary : Palette.textPrimary)
+                .frame(width: 40, alignment: .leading)
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.white.opacity(0.07))
+                    Capsule().fill((best ?? 0) >= 0.85 ? Palette.noteCorrect : Palette.accent)
+                        .frame(width: proxy.size.width * (best ?? 0))
+                }
+            }
+            .frame(height: 4)
+        }
     }
 
     @ViewBuilder private func keysPill(for entry: SongEntry) -> some View {
@@ -154,8 +177,8 @@ struct LibraryView: View {
             piece().frame(maxWidth: .infinity, alignment: .leading)
             format().frame(width: 110, alignment: .leading)
             keys().frame(width: 130, alignment: .leading)
-            length().frame(width: 80, alignment: .leading)
-            added().frame(width: 90, alignment: .leading)
+            length().frame(width: 130, alignment: .leading)
+            added().frame(width: 100, alignment: .leading)
         }
         .padding(.horizontal, 24)
     }

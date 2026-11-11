@@ -50,22 +50,47 @@ final class PracticeSession {
 
     /// Keys the app is sounding right now, with the hand they belong to.
     private(set) var sounding: [Pitch: Hand] = [:]
-    /// The player's result on each note so far, by note id (requirement FB-1).
-    private(set) var results: [Int: PlaybackEngine.Judgement] = [:]
+    /// What the player did on each note so far, by note id (requirement FB-1).
+    private(set) var attempts: [Int: Attempt] = [:]
+    var results: [Int: PlaybackEngine.Judgement] { attempts.mapValues(\.judgement) }
+    /// Set when a run reaches the end of the song: what to show on the review screen.
+    private(set) var review: Review?
+    /// Adaptive practice (requirement FB-3): while looping, raise the tempo after clean
+    /// passes and lower it after poor ones.
+    var adaptsTempo = false
+    /// Clean loop passes in a row so far, toward the three that raise the tempo.
+    var cleanPasses: Int { adaptive.cleanPasses }
+    private var adaptive = AdaptiveTempo()
+
+    /// A finished run with the history it is compared against.
+    struct Review {
+        let analysis: RunReview
+        /// Accuracy of this song's runs, oldest first, ending with this one.
+        let history: [Double]
+        let handMode: HandMode
+        let rate: Double
+        let usedWaitMode: Bool
+    }
     /// Wrong keys currently held down.
     private(set) var wrongKeys: Set<Pitch> = []
     /// Notes wait mode is holding for.
     private(set) var awaited: [Note] = []
 
-    @ObservationIgnored private var wrongKeyCount = 0
+    @ObservationIgnored private var wrongKeyBeats: [Double] = []
     @ObservationIgnored private let onRunEnded: (RunResult) -> Void
+    @ObservationIgnored private let history: () -> [RunResult]
 
     /// - Parameters:
     ///   - piano: plays the song's notes.
     ///   - clicks: a percussion instrument for the metronome.
+    ///   - history: the song's earlier runs, oldest first.
     ///   - onRunEnded: receives the result of each run in which the player played.
-    init(loaded: LoadedSong, piano: any Instrument, clicks: any Instrument, onRunEnded: @escaping (RunResult) -> Void) {
+    init(
+        loaded: LoadedSong, piano: any Instrument, clicks: any Instrument,
+        history: @escaping () -> [RunResult], onRunEnded: @escaping (RunResult) -> Void
+    ) {
         self.loaded = loaded
+        self.history = history
         layout = ScoreLayout(song: loaded.song, pages: loaded.pages)
         self.onRunEnded = onRunEnded
         // The player's callback needs the session, which does not exist until init returns.
@@ -93,6 +118,7 @@ final class PracticeSession {
         if isPlaying {
             pause()
         } else {
+            review = nil
             let measure = song.measure(atBeat: max(beat, 0))
             player.play(countInBeats: countInIsOn ? measure?.length ?? 4 : 0)
             isPlaying = true
@@ -163,33 +189,76 @@ final class PracticeSession {
             sounding.removeAll()
             isPlaying = false
             endRun(completed: true)
-        case let .judged(noteID, judgement): results[noteID] = judgement
-        case let .wrongKey(pitch):
+        case let .judged(noteID, judgement, offset): attempts[noteID] = Attempt(judgement: judgement, offset: offset)
+        case let .wrongKey(pitch, beat):
             wrongKeys.insert(pitch)
-            wrongKeyCount += 1
+            wrongKeyBeats.append(beat)
         case let .waiting(notes): awaited = notes
         case .resumed: awaited = []
         case let .judgementsCleared(fromBeat):
             // A loop pass or a jump back: the notes ahead are fresh again.
-            results = results.filter { song.notes[$0.key].start < fromBeat }
+            if isPlaying, let loop = loopBeats, abs(fromBeat - loop.lowerBound) < 1e-6 { finishedLoopPass(loop) }
+            attempts = attempts.filter { song.notes[$0.key].start < fromBeat }
+            wrongKeyBeats.removeAll { $0 >= fromBeat }
             awaited = []
         case .click: break
         }
     }
 
+    /// Starts the loop the review suggests, with adaptive tempo on.
+    func startSuggestedLoop() {
+        guard let loop = review?.analysis.suggestedLoop else { return }
+        review = nil
+        rate = loop.rate
+        if let hand = loop.hand { handMode = hand == .right ? .right : .left }
+        adaptsTempo = true
+        loopBars = loop.bars
+        seek(to: loopBeats?.lowerBound ?? 0)
+        togglePlay()
+    }
+
+    func dismissReview() {
+        review = nil
+    }
+
+    /// One pass of the loop ended: adjust the tempo if adaptive practice is on.
+    private func finishedLoopPass(_ loop: ClosedRange<Double>) {
+        guard adaptsTempo, !handMode.playerHands.isEmpty else { return }
+        let inLoop = attempts.filter { loop.contains(song.notes[$0.key].start) }
+        guard !inLoop.isEmpty else { return }
+        let pass = RunReview(
+            song: song, attempts: inLoop, wrongKeyBeats: wrongKeyBeats.filter { loop.contains($0) },
+            playerHands: handMode.playerHands, rate: rate
+        )
+        let next = adaptive.passEnded(accuracy: pass.accuracy, rate: rate)
+        if next != rate { rate = next }
+    }
+
     private func endRun(completed: Bool) {
         defer {
-            results.removeAll()
-            wrongKeyCount = 0
+            attempts.removeAll()
+            wrongKeyBeats.removeAll()
         }
-        guard !results.isEmpty else { return }
-        func count(_ judgement: PlaybackEngine.Judgement) -> Int { results.values.count { $0 == judgement } }
+        // A few notes before giving up is not a run worth keeping.
+        guard completed || attempts.count >= 8 else { return }
+        let analysis = RunReview(
+            song: song, attempts: attempts, wrongKeyBeats: wrongKeyBeats,
+            playerHands: handMode.playerHands, rate: rate
+        )
+        func count(_ judgement: PlaybackEngine.Judgement) -> Int { attempts.values.count { $0.judgement == judgement } }
+        let earlier = history().filter(\.completed).compactMap(\.accuracy)
         onRunEnded(RunResult(
             date: Date(), rate: rate, hands: handMode.playerHands.map(\.rawValue).sorted(),
             usedWaitMode: waitsForPlayer, completed: completed,
             correct: count(.correct), early: count(.early), late: count(.late), missed: count(.missed),
-            wrongKeys: wrongKeyCount
+            wrongKeys: wrongKeyBeats.count, accuracy: analysis.accuracy, averageOffset: analysis.averageOffset
         ))
+        if completed {
+            review = Review(
+                analysis: analysis, history: Array((earlier + [analysis.accuracy]).suffix(8)),
+                handMode: handMode, rate: rate, usedWaitMode: waitsForPlayer
+            )
+        }
     }
 }
 

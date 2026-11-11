@@ -15,9 +15,11 @@ public struct PlaybackEngine: Sendable {
         /// The end of the song was reached; playback has stopped.
         case finished
         /// The player's attempt at a note was judged. `noteID` indexes `song.notes`.
-        case judged(noteID: Int, Judgement)
-        /// The player pressed a key that no upcoming note asks for.
-        case wrongKey(Pitch)
+        /// `offset` is how far from the note the key was pressed, in seconds (negative is
+        /// early); nil when timing was not measured (wait mode, missed notes).
+        case judged(noteID: Int, Judgement, offset: Double?)
+        /// The player pressed a key that no upcoming note asks for, at this beat.
+        case wrongKey(Pitch, beat: Double)
         /// Wait mode stopped the music until these notes are played.
         case waiting(for: [Note])
         /// The awaited notes were played and the music moves on.
@@ -187,7 +189,7 @@ public struct PlaybackEngine: Sendable {
                 let note = song.notes[missIndex]
                 if playerHands.contains(note.hand), !isJudged[missIndex] {
                     isJudged[missIndex] = true
-                    events.append(.judged(noteID: note.id, .missed))
+                    events.append(.judged(noteID: note.id, .missed, offset: nil))
                 }
                 missIndex += 1
             }
@@ -218,10 +220,10 @@ public struct PlaybackEngine: Sendable {
             // A press shortly before the music reaches the note counts too.
             let isNear = isWaiting || seconds(forBeats: group[0].start - beat, at: beat) <= Self.matchWindow
             guard isNear, let note = group.first(where: { $0.pitch == pitch && !isJudged[$0.id] }) else {
-                return [.wrongKey(pitch)]
+                return [.wrongKey(pitch, beat: beat)]
             }
             isJudged[note.id] = true
-            var events: [Event] = [.judged(noteID: note.id, .correct)]
+            var events: [Event] = [.judged(noteID: note.id, .correct, offset: nil)]
             if isWaiting, group.allSatisfy({ isJudged[$0.id] }) {
                 isWaiting = false
                 anchorTime = time
@@ -234,11 +236,11 @@ public struct PlaybackEngine: Sendable {
         let candidate = song.notes
             .filter { $0.pitch == pitch && playerHands.contains($0.hand) && !isJudged[$0.id] && abs($0.start - beat) <= window }
             .min { abs($0.start - beat) < abs($1.start - beat) }
-        guard let note = candidate else { return [.wrongKey(pitch)] }
+        guard let note = candidate else { return [.wrongKey(pitch, beat: beat)] }
         isJudged[note.id] = true
         let offset = seconds(forBeats: beat - note.start, at: beat)
         let judgement: Judgement = abs(offset) <= Self.onTimeWindow ? .correct : (offset < 0 ? .early : .late)
-        return [.judged(noteID: note.id, judgement)]
+        return [.judged(noteID: note.id, judgement, offset: offset)]
     }
 
     /// The player's next unplayed notes that start together, if any remain.

@@ -41,6 +41,26 @@
         }
       }
     },
+    "%lld wrong · %lld missed · %lld early · %lld late": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld erradas · %lld perdidas · %lld adiantadas · %lld atrasadas"
+          }
+        }
+      }
+    },
+    "%lld%% tempo": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%% do andamento"
+          }
+        }
+      }
+    },
     "49 keys": {
       "localizations": {
         "pt-BR": {
@@ -71,6 +91,26 @@
         }
       }
     },
+    "Bar %lld": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compasso %lld"
+          }
+        }
+      }
+    },
+    "Bar by bar": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compasso a compasso"
+          }
+        }
+      }
+    },
     "Bar · Beat": {
       "localizations": {
         "pt-BR": {
@@ -87,6 +127,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compassos %lld–%lld"
+          }
+        }
+      }
+    },
+    "Best run": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melhor execução"
           }
         }
       }
@@ -117,6 +167,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escolha uma música na Biblioteca para começar a praticar."
+          }
+        }
+      }
+    },
+    "Clean": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpo"
+          }
+        }
+      }
+    },
+    "Clean. Every note in time and in place.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpo. Todas as notas no tempo e no lugar."
           }
         }
       }
@@ -161,12 +231,42 @@
         }
       }
     },
+    "Done": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concluir"
+          }
+        }
+      }
+    },
     "Drop a score here": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Solte uma partitura aqui"
+          }
+        }
+      }
+    },
+    "Early": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adiantado"
+          }
+        }
+      }
+    },
+    "First run": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primeira execução"
           }
         }
       }
@@ -261,6 +361,36 @@
         }
       }
     },
+    "Last %lld runs": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Últimas %lld execuções"
+          }
+        }
+      }
+    },
+    "Last played": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última vez"
+          }
+        }
+      }
+    },
+    "Late": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atrasado"
+          }
+        }
+      }
+    },
     "Learn": {
       "localizations": {
         "pt-BR": {
@@ -351,6 +481,36 @@
         }
       }
     },
+    "Loop bars %lld–%lld at %lld%%": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repetir compassos %lld–%lld a %lld%%"
+          }
+        }
+      }
+    },
+    "Loop bars %lld–%lld at %lld%%, left hand first": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repetir compassos %lld–%lld a %lld%%, mão esquerda primeiro"
+          }
+        }
+      }
+    },
+    "Loop bars %lld–%lld at %lld%%, right hand first": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repetir compassos %lld–%lld a %lld%%, mão direita primeiro"
+          }
+        }
+      }
+    },
     "Loop these bars": {
       "localizations": {
         "pt-BR": {
@@ -421,6 +581,16 @@
         }
       }
     },
+    "Midiot raises the tempo as soon as you play it cleanly three times in a row.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Midiot aumenta o andamento assim que você tocar sem erros três vezes seguidas."
+          }
+        }
+      }
+    },
     "No keyboard connected": {
       "localizations": {
         "pt-BR": {
@@ -471,12 +641,42 @@
         }
       }
     },
+    "Notes right": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas certas"
+          }
+        }
+      }
+    },
+    "Nothing for you to play in this bar.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada para você tocar neste compasso."
+          }
+        }
+      }
+    },
     "Nothing to practice yet": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Nada para praticar ainda"
+          }
+        }
+      }
+    },
+    "On the beat": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tempo"
           }
         }
       }
@@ -531,6 +731,16 @@
         }
       }
     },
+    "Play again": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocar de novo"
+          }
+        }
+      }
+    },
     "Play the highlighted keys": {
       "localizations": {
         "pt-BR": {
@@ -547,6 +757,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Praticar"
+          }
+        }
+      }
+    },
+    "Raise tempo as I improve": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aumentar o andamento conforme eu melhoro"
           }
         }
       }
@@ -581,12 +801,32 @@
         }
       }
     },
+    "Run complete": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Execução concluída"
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Ajustes"
+          }
+        }
+      }
+    },
+    "Shaky": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instável"
           }
         }
       }
@@ -631,6 +871,16 @@
         }
       }
     },
+    "Start this loop": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Começar esta repetição"
+          }
+        }
+      }
+    },
     "System": {
       "localizations": {
         "pt-BR": {
@@ -661,6 +911,16 @@
         }
       }
     },
+    "Timing": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo"
+          }
+        }
+      }
+    },
     "Timing adjustment": {
       "localizations": {
         "pt-BR": {
@@ -671,12 +931,32 @@
         }
       }
     },
+    "Timing is not measured in wait mode.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tempo não é medido no modo de espera."
+          }
+        }
+      }
+    },
     "To bar": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Até o compasso"
+          }
+        }
+      }
+    },
+    "Up 5% after three clean passes, down 5% after two poor ones.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobe 5% após três passagens limpas, desce 5% após duas ruins."
           }
         }
       }
@@ -701,6 +981,16 @@
         }
       }
     },
+    "Whole piece": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peça inteira"
+          }
+        }
+      }
+    },
     "Wider than 49": {
       "localizations": {
         "pt-BR": {
@@ -721,6 +1011,66 @@
         }
       }
     },
+    "You tend to drag, mostly in the left hand.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você tende a atrasar, principalmente na mão esquerda."
+          }
+        }
+      }
+    },
+    "You tend to drag, mostly in the right hand.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você tende a atrasar, principalmente na mão direita."
+          }
+        }
+      }
+    },
+    "You tend to drag.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você tende a atrasar."
+          }
+        }
+      }
+    },
+    "You tend to rush, mostly in the left hand.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você tende a adiantar, principalmente na mão esquerda."
+          }
+        }
+      }
+    },
+    "You tend to rush, mostly in the right hand.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você tende a adiantar, principalmente na mão direita."
+          }
+        }
+      }
+    },
+    "You tend to rush.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você tende a adiantar."
+          }
+        }
+      }
+    },
     "Your imports stay on this Mac.": {
       "localizations": {
         "pt-BR": {
@@ -731,12 +1081,82 @@
         }
       }
     },
+    "Your timing is steady.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu tempo está firme."
+          }
+        }
+      }
+    },
+    "avg %lld ms off": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "média de %lld ms fora"
+          }
+        }
+      }
+    },
+    "both hands": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "duas mãos"
+          }
+        }
+      }
+    },
+    "left hand": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mão esquerda"
+          }
+        }
+      }
+    },
     "macOS built-in sounds": {
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "Sons integrados do macOS"
+          }
+        }
+      }
+    },
+    "right hand": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mão direita"
+          }
+        }
+      }
+    },
+    "since last run": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desde a última execução"
+          }
+        }
+      }
+    },
+    "wait mode": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "modo de espera"
           }
         }
       }

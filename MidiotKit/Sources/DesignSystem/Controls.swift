@@ -216,3 +216,27 @@ public struct PrimaryButton: View {
         .buttonStyle(.plain)
     }
 }
+
+/// Outlined button for secondary actions next to a `PrimaryButton`.
+public struct SecondaryButton: View {
+    private let title: LocalizedStringKey
+    private let action: () -> Void
+
+    public init(_ title: LocalizedStringKey, action: @escaping () -> Void) {
+        self.title = title
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.sans(14))
+                .foregroundStyle(Palette.textPrimary)
+                .padding(.horizontal, 18)
+                .frame(height: 44)
+                .overlay(RoundedRectangle(cornerRadius: Radius.button, style: .continuous).strokeBorder(Palette.hairlineStrong))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
