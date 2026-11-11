@@ -2,6 +2,7 @@ import AppKit
 import DesignSystem
 import Library
 import MusicCore
+import Practice
 import Sketch
 import SwiftUI
 
@@ -119,7 +120,7 @@ enum SnapshotMode {
 
         // A drill opened from the path, shown as a sheet.
         model.section = .today
-        model.open(.scale(.bFlat), title: "B♭ major scale")
+        model.open(Curriculum.Step(.scale(.bFlat), .right), title: "B♭ major scale · right hand")
         await waitUntil { model.session?.loaded.entry.format == .drill }
         UserDefaults.standard.set("split", forKey: "practiceViewMode")
         model.session?.seek(to: 2)
@@ -129,6 +130,8 @@ enum SnapshotMode {
         save(RootView(), model: model, to: folder.appendingPathComponent("today.png"))
         await sketchpad(model: model, folder: folder)
 
+        model.section = .chords
+        save(RootView(), model: model, to: folder.appendingPathComponent("chords.png"))
         model.section = .settings
         save(RootView(), model: model, to: folder.appendingPathComponent("settings.png"))
     }
@@ -198,6 +201,8 @@ enum SnapshotMode {
         sketch.stop()
         sketch.quantize()
         sketch.selectedNotes = [NoteRef(layer: 0, index: 4), NoteRef(layer: 0, index: 5), NoteRef(layer: 0, index: 6)]
+        // Light the keys of the first suggested chord.
+        sketch.shownChord = sketch.suggestions.first?.chord
         save(RootView(), model: model, to: folder.appendingPathComponent("sketchpad.png"))
 
         for (format, name) in [

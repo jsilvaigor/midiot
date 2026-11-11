@@ -9,7 +9,9 @@ import UniformTypeIdentifiers
 /// the middle, harmony and mood on the right, and the always-on capture along the bottom.
 struct SketchpadView: View {
     let model: SketchpadModel
+    @Environment(AppModel.self) private var app
     @Environment(\.locale) private var locale
+    @AppStorage(NoteNamingSetting.storageKey) private var naming = NoteNaming.letters
 
     @State private var prompt: TextPrompt?
     @State private var promptText = ""
@@ -39,11 +41,13 @@ struct SketchpadView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     Palette.hairline.frame(width: 1)
-                    SketchAside(model: model).frame(width: 288)
+                    SketchAside(model: model, range: app.range).frame(width: 288)
                 }
             } else {
                 noPlay
             }
+            Palette.hairline.frame(height: 1)
+            keyboard
             Palette.hairline.frame(height: 1)
             CaptureBar(model: model)
         }
@@ -59,6 +63,32 @@ struct SketchpadView: View {
         .confirmationDialog("Delete this play and all its takes?", isPresented: $confirmsDeletePlay) {
             Button("Delete play", role: .destructive) { model.deletePlay() }
         }
+    }
+
+    /// The keys being played, and the keys of the suggested chord being shown: its bass note
+    /// in the left hand's color, the chord in the right hand's.
+    private var keyboard: some View {
+        var highlights: [Pitch: Color] = [:]
+        if let chord = model.shownChord {
+            let placed = chord.voicing(in: app.range)
+            if let bass = placed.bass { highlights[bass] = Palette.handLeft }
+            for tone in placed.tones { highlights[tone] = Palette.handRight }
+        }
+        for pitch in app.pressed {
+            // A suggested key that is being pressed turns green: that one is found.
+            highlights[pitch] = highlights[pitch] != nil ? Palette.noteCorrect : Palette.textPrimary.mix(with: Palette.accent, by: 0.5)
+        }
+        let whiteKeys = app.range.pitches.count { !$0.isBlackKey }
+        return KeyboardView(
+            range: app.range, highlights: highlights, naming: naming,
+            onPress: app.mouseDown(on:), onRelease: app.mouseUp(on:)
+        )
+        .frame(height: 104)
+        .frame(maxWidth: CGFloat(whiteKeys) * 44)
+        .padding(.horizontal, Spacing.l)
+        .padding(.top, 8).padding(.bottom, 10)
+        .frame(maxWidth: .infinity)
+        .background(Palette.background)
     }
 
     private func ask(_ title: LocalizedStringKey, initial: String = "", action: @escaping (String) -> Void) {
@@ -584,9 +614,12 @@ struct TakeRoll: View {
                     }
                 }
                 if let playhead {
-                    TimelineView(.animation) { _ in
+                    TimelineView(.animation) { timeline in
+                        // Read per tick, so the playhead is redrawn every frame.
+                        let beat = playhead()
                         Canvas { context, size in
-                            let x = layout.x(atBeat: max(playhead(), 0))
+                            _ = timeline.date
+                            let x = layout.x(atBeat: max(beat, 0))
                             var glow = context
                             glow.addFilter(.shadow(color: Palette.accent.opacity(0.8), radius: 5))
                             glow.fill(Path(CGRect(x: x - 1, y: 0, width: 2, height: size.height)), with: .color(Palette.accent))

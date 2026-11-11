@@ -191,6 +191,46 @@ import Testing
         #expect(alone.map { $0.chord.name(fifths: -1) } == ["Gm", "B♭", "A7"])
     }
 
+    @Test func chordsAreSpelledOnTheirOwnLetters() {
+        #expect(Chord(root: 0, quality: .major7).spelledTones == ["C", "E", "G", "B"])
+        #expect(Chord(root: 0, quality: .diminished7).spelledTones == ["C", "E♭", "G♭", "B𝄫"])
+        #expect(Chord(root: 10, quality: .minor9).spelledTones == ["B♭", "C", "D♭", "F", "A♭"])
+        #expect(Chord(root: 6, quality: .augmented).spelledTones == ["F♯", "A♯", "C𝄪"])
+        #expect(Chord(root: 4, quality: .sus2).spelledTones == ["E", "F♯", "B"])
+        #expect(Chord.Quality.halfDiminished.formula == ["1", "♭3", "♭5", "♭7"])
+        #expect(Chord.Quality.diminished7.formula == ["1", "♭3", "♭5", "𝄫7"])
+        #expect(Chord.Quality.dominant9.formula == ["1", "9", "3", "5", "♭7"])
+        #expect(Chord.Quality.augmented.formula == ["1", "3", "♯5"])
+        for quality in Chord.Quality.allCases { #expect(quality.degrees.count == quality.intervals.count) }
+    }
+
+    @Test func inversionsMoveTheLowestTonesUp() {
+        let chord = Chord(root: 0, quality: .dominant7)
+        #expect(chord.tones(from: 60).map(\.midiNumber) == [60, 64, 67, 70])
+        #expect(chord.tones(from: 60, inversion: 1).map(\.midiNumber) == [64, 67, 70, 72])
+        #expect(chord.tones(from: 60, inversion: 3).map(\.midiNumber) == [70, 72, 76, 79])
+        #expect(Chord(root: 0, quality: .major).tones(from: 60, inversion: 9).map(\.midiNumber) == [67, 72, 76])
+    }
+
+    @Test func voicingsFitTheKeyboardTheyAreShownOn() {
+        for range in [KeyboardRange.twentyFiveKeys, .fortyNineKeys] {
+            for root in 0..<12 {
+                for quality in Chord.Quality.allCases {
+                    let chord = Chord(root: root, quality: quality)
+                    let placed = chord.voicing(in: range)
+                    #expect(placed.tones.allSatisfy(range.contains), "\(chord.name()) on \(range.keyCount) keys")
+                    #expect(placed.tones.map { $0.midiNumber - placed.tones[0].midiNumber } == quality.intervals)
+                    if let bass = placed.bass {
+                        #expect(range.contains(bass) && bass < placed.tones[0] && bass.pitchClass == root)
+                    }
+                }
+            }
+        }
+        // 49 keys always leave room for the left hand; a slash chord puts its own bass there.
+        #expect(Chord(root: 0, quality: .major, bass: 4).voicing(in: .fortyNineKeys).bass?.pitchClass == 4)
+        #expect((0..<12).allSatisfy { Chord(root: $0, quality: .major9).voicing(in: .fortyNineKeys).bass != nil })
+    }
+
     @Test func voicingsArePlayable() {
         for root in 0..<12 {
             let voicing = Chord(root: root, quality: .dominant9).voicing

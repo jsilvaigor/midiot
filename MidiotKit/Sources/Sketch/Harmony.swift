@@ -106,6 +106,30 @@ public struct Chord: Hashable, Sendable {
         }
 
         var hasMinorThird: Bool { intervals.contains(3) }
+
+        /// Scale degree of each tone, parallel to `intervals`: 1, 3, 5, 7, 9.
+        public var degrees: [Int] {
+            intervals.map { interval in
+                switch interval {
+                case 0: 1
+                case 2: self == .sus2 ? 2 : 9
+                case 3, 4: 3
+                case 5: 4
+                case 6, 7, 8: 5
+                case 9: self == .diminished7 ? 7 : 6
+                default: 7
+                }
+            }
+        }
+
+        /// The chord as altered degrees of the major scale: "1 ♭3 5 ♭7".
+        public var formula: [String] {
+            let major = [1: 0, 2: 2, 3: 4, 4: 5, 5: 7, 6: 9, 7: 11, 9: 2]
+            return zip(intervals, degrees).map { interval, degree in
+                let alter = interval - (major[degree] ?? 0)
+                return (alter == -2 ? "𝄫" : alter == -1 ? "♭" : alter == 1 ? "♯" : "") + String(degree)
+            }
+        }
     }
 
     /// Pitch class of the root.
@@ -142,9 +166,57 @@ public struct Chord: Hashable, Sendable {
 
     /// The chord as keys to play: the root low, the chord around middle C.
     public var voicing: [Pitch] {
-        let low = 36 + (bass ?? root)
-        let base = 48 + root + (root > 7 ? 0 : 12)
-        return [Pitch(midiNumber: low)] + quality.intervals.map { Pitch(midiNumber: base + $0 - (base + $0 > 76 ? 12 : 0)) }
+        let placed = voicing(in: .fortyNineKeys)
+        return (placed.bass.map { [$0] } ?? []) + placed.tones
+    }
+
+    /// The chord placed on a keyboard: the right hand's keys in close position as near the
+    /// middle of the keyboard as they fit, and a bass note for the left hand when there is
+    /// room below them.
+    public func voicing(in range: KeyboardRange) -> (bass: Pitch?, tones: [Pitch]) {
+        let top = quality.intervals.max() ?? 0
+        let middle = Double(range.lowest.midiNumber + range.highest.midiNumber) / 2
+        let roots = range.pitches.map(\.midiNumber).filter { ((($0 - root) % 12) + 12) % 12 == 0 && $0 + top <= range.highest.midiNumber }
+        // On a keyboard too short for the chord, start from its lowest root anyway.
+        let base = roots.min { abs(Double($0) + Double(top) / 2 - middle) < abs(Double($1) + Double(top) / 2 - middle) }
+            ?? (range.lowest.midiNumber + ((root - range.lowest.midiNumber) % 12 + 12) % 12)
+        let tones = quality.intervals.map { Pitch(midiNumber: base + $0) }
+        // The nearest key below the chord with the bass note's name.
+        let bassClass = bass ?? root
+        let below = base - (((base - bassClass) % 12 + 12) % 12 == 0 ? 12 : ((base - bassClass) % 12 + 12) % 12)
+        return (below >= range.lowest.midiNumber ? Pitch(midiNumber: below) : nil, tones)
+    }
+
+    /// The chord's tones from `base` (the root's MIDI number) upward, with the lowest
+    /// `inversion` tones moved up an octave: 1 puts the third in the bass, and so on.
+    public func tones(from base: Int, inversion: Int = 0) -> [Pitch] {
+        let intervals = quality.intervals
+        let turns = min(max(inversion, 0), intervals.count - 1)
+        return (intervals.dropFirst(turns) + intervals.prefix(turns).map { $0 + 12 }).map { Pitch(midiNumber: base + $0) }
+    }
+
+    /// The chord's notes spelled as theory writes them, each on its own letter: C dim7 is
+    /// C, E♭, G♭, B𝄫. The root is spelled the common way.
+    public var spelledTones: [String] {
+        let letters = ["C", "D", "E", "F", "G", "A", "B"]
+        let naturals = [0, 2, 4, 5, 7, 9, 11]
+        let rootName = Self.name(ofPitchClass: root)
+        guard let rootLetter = letters.firstIndex(of: String(rootName.prefix(1))) else { return [] }
+        return zip(quality.intervals, quality.degrees).map { interval, degree in
+            let letter = (rootLetter + degree - 1) % 7
+            // Distance from the letter's natural pitch to the sounding one, as −2…2.
+            var alter = (root + interval - naturals[letter]) % 12
+            if alter > 6 { alter -= 12 }
+            if alter < -6 { alter += 12 }
+            let sign = switch alter {
+            case 1: "♯"
+            case 2: "𝄪"
+            case -1: "♭"
+            case -2: "𝄫"
+            default: ""
+            }
+            return letters[letter] + sign
+        }
     }
 
     /// Names the chord formed by the given keys, or nil when they form none the app knows.
