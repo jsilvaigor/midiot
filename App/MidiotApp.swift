@@ -20,7 +20,11 @@ struct MidiotApp: App {
                 .tint(Palette.accent)
                 .font(.bodyText)
                 .frame(minWidth: 900, minHeight: 600)
-                .task { model.start() }
+                .task {
+                    // The Dock can show a blank tile for a build run from Xcode; hand it the icon.
+                    NSApplication.shared.applicationIconImage = NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath)
+                    model.start()
+                }
                 .onChange(of: model.devices.devices) { model.devicesChanged() }
         }
         .defaultSize(width: 1280, height: 800)

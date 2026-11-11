@@ -88,6 +88,47 @@ import Testing
         MIDIClientDispose(client)
     }
 
+    /// What the app plays reaches the chosen destination, and stops when MIDI out is turned off.
+    @MainActor @Test func midiOut() async throws {
+        let manager = DeviceManager()
+        manager.start(onEvent: { _ in })
+        let words = Mutex<[UInt32]>([])
+        var client = MIDIClientRef()
+        MIDIClientCreateWithBlock("MidiotOutTests" as CFString, &client, nil)
+        let port = Self.destination(named: "Midiot Test Synth", client: client) { new in
+            words.withLock { $0 += new }
+        }
+        func received(_ word: UInt32) -> Bool { words.withLock { $0.contains(word) } }
+
+        try await wait { manager.destinations.contains { $0.name == "Midiot Test Synth" } }
+        let synth = try #require(manager.destinations.first { $0.name == "Midiot Test Synth" })
+
+        // Nothing is sent until a destination is chosen.
+        manager.out.noteOn(60, velocity: 100, channel: 0)
+        manager.setOutput(.destination(id: synth.id, name: synth.name))
+        try await Task.sleep(for: .milliseconds(200))
+        manager.out.program(48, channel: 2)
+        manager.out.noteOn(62, velocity: 90, channel: 2)
+        manager.out.controller(7, value: 64, channel: 2)
+        manager.out.noteOff(62, channel: 2)
+        try await wait { received(0x2082_3E00) }
+        #expect(received(0x20C2_3000))
+        #expect(received(0x2092_3E5A))
+        #expect(received(0x20B2_0740))
+        #expect(!received(0x2090_3C64))
+
+        // Turning it off releases everything first.
+        manager.setOutput(.off)
+        try await wait { received(0x20BF_7B00) }
+        words.withLock { $0 = [] }
+        manager.out.noteOn(64, velocity: 100, channel: 0)
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(words.withLock { $0.isEmpty })
+
+        MIDIEndpointDispose(port)
+        MIDIClientDispose(client)
+    }
+
     /// A virtual MIDI destination. Made outside the main actor because it is called on the
     /// MIDI thread.
     private nonisolated static func destination(

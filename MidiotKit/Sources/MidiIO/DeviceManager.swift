@@ -2,6 +2,7 @@ import MusicCore
 import Observation
 import os
 import SwiftMIDIIO
+import Synchronization
 
 /// Watches for MIDI keyboards, connects to every one that appears, and reports what is played.
 ///
@@ -11,11 +12,19 @@ import SwiftMIDIIO
 public final class DeviceManager {
     /// Keyboards connected right now, in a stable order.
     public private(set) var devices: [ConnectedDevice] = []
+    /// Places the app can send what it plays, in a stable order.
+    public private(set) var destinations: [MIDIDestination] = []
+    /// Where MIDI out goes now.
+    public private(set) var outChoice = MIDIOutChoice.off
+    /// Sends to wherever `outChoice` points.
+    public let out = MIDIOutPort()
     /// Set when MIDI could not be started; shown to the user.
     public private(set) var startError: String?
 
     @ObservationIgnored private let manager: MIDIManager
     @ObservationIgnored private var isStarted = false
+    /// The port MIDI out goes to when it would come straight back in; read on the MIDI thread.
+    @ObservationIgnored private let loopback = Mutex<LoopbackPort?>(nil)
     /// DAW ports of the Launchkeys whose pads the app is lighting.
     @ObservationIgnored private var lightPorts: Set<Int32> = []
     @ObservationIgnored private var wantedLights: [Int: PadLight] = [:]
@@ -55,6 +64,8 @@ public final class DeviceManager {
                 receiver: .events { [weak self] events, timeStamp, source in
                     let device = source?.device
                     let profile = DeviceProfile.matching(deviceName: device?.name ?? source?.name ?? "")
+                    if let loop = self?.loopback.withLock({ $0 }),
+                       loop == LoopbackPort(name: source?.name ?? "", deviceID: device?.uniqueID) { return }
                     // The Launchkey's DAW port reports its buttons and knobs; nothing on it is playing.
                     let isDAWPort = profile.model == .launchkeyMiniMK3 && LaunchkeyLights.isDAWPort(name: source?.name ?? "")
                     for event in events {
@@ -99,6 +110,65 @@ public final class DeviceManager {
             log.info("Connected keyboards: \(found.map(\.name).joined(separator: ", "), privacy: .public)")
         }
         connectLights()
+        refreshDestinations()
+    }
+
+    // MARK: MIDI out (requirement SN-3)
+
+    private static let outTag = "midi out"
+    private static let virtualOutTag = "midi out for other apps"
+
+    /// Points MIDI out somewhere else, releasing every note at the place it leaves.
+    public func setOutput(_ choice: MIDIOutChoice) {
+        guard choice != outChoice else { return }
+        out.silence()
+        out.use(nil)
+        loopback.withLock { $0 = nil }
+        manager.remove(.outputConnection, .withTag(Self.outTag))
+        manager.remove(.output, .withTag(Self.virtualOutTag))
+        outChoice = choice
+        connectOutput()
+    }
+
+    private func connectOutput() {
+        do {
+            switch outChoice {
+            case .off:
+                break
+            case .otherApps:
+                try manager.addOutput(name: "Midiot", tag: Self.virtualOutTag, uniqueID: .userDefaultsManaged(key: "midiOutPortID"))
+                out.use(manager.managedOutputs[Self.virtualOutTag])
+            case let .destination(id, _):
+                // The connection comes back by itself when the port is unplugged and returns.
+                try manager.addOutputConnection(to: .inputs(matching: [.uniqueID(id)]), tag: Self.outTag)
+                out.use(manager.managedOutputConnections[Self.outTag])
+                noteLoopback()
+            }
+        } catch {
+            log.error("MIDI out failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// Remembers the chosen port if it is one that sends back what it receives.
+    private func noteLoopback() {
+        guard case let .destination(id, _) = outChoice else { return }
+        guard let port = manager.endpoints.inputs.first(where: { $0.uniqueID == id }), case let .value(driver) = port.driverOwner, LoopbackPort.drivers.contains(driver) else {
+            return loopback.withLock { $0 = nil }
+        }
+        loopback.withLock { $0 = LoopbackPort(name: port.name, deviceID: port.device?.uniqueID) }
+    }
+
+    private func refreshDestinations() {
+        var found: [MIDIDestination] = []
+        for port in manager.endpoints.inputs where !lightPorts.contains(port.uniqueID) {
+            // "Device port" unless the port is the whole device or says so itself.
+            let device = port.device?.name ?? ""
+            let name = device.isEmpty || port.name.contains(device) ? port.name : "\(device) \(port.name)"
+            found.append(MIDIDestination(id: port.uniqueID, name: name))
+        }
+        found.sort { ($0.name, $0.id) < ($1.name, $1.id) }
+        if found != destinations { destinations = found }
+        noteLoopback()
     }
 
     // MARK: Pad lights (requirement HW-2)

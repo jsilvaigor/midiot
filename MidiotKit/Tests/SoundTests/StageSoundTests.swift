@@ -100,4 +100,59 @@ extension SoundTests {
         #expect(other > full * 0.8)
         #expect(restored > full * 0.8)
     }
+
+    /// MIDI out: everything a synth is told reaches the copy, and a late listener is first
+    /// told which sound each channel has.
+    @Test func whatASynthPlaysIsCopiedOut() throws {
+        let engine = AVAudioEngine()
+        let synth = PaletteSynth()
+        let piano = SamplerInstrument()
+        engine.attach(synth.node)
+        engine.attach(piano.node)
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2)!
+        engine.connect(synth.node, to: engine.mainMixerNode, format: format)
+        engine.connect(piano.node, to: engine.mainMixerNode, format: format)
+        try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
+        try engine.start()
+        try synth.load(.system)
+        synth.setProgram(48, channel: 3)
+
+        let sent = Mutex<[ChannelMessage]>([])
+        synth.mirror { message in sent.withLock { $0.append(message) } }
+        #expect(sent.withLock { $0 } == [.program(48, channel: 3)])
+
+        sent.withLock { $0 = [] }
+        let voice = synth.voice(channel: 3)
+        voice.noteOn(.middleC, velocity: 80)
+        synth.setVolume(0.5, channel: 3)
+        voice.setSustain(true)
+        voice.noteOff(.middleC)
+        synth.setProgram(19, channel: 4)
+        #expect(sent.withLock { $0 } == [
+            .noteOn(note: 60, velocity: 80, channel: 3),
+            .controller(number: 7, value: 64, channel: 3),
+            .controller(number: 64, value: 127, channel: 3),
+            .noteOff(note: 60, channel: 3),
+            .program(19, channel: 4),
+        ])
+
+        // Every voice of the piano goes out on the one channel asked for.
+        sent.withLock { $0 = [] }
+        piano.mirror(to: { message in sent.withLock { $0.append(message) } }, channel: 0)
+        piano.voice(channel: 2).noteOn(.middleC, velocity: 70)
+        piano.voice(channel: 2).noteOff(.middleC)
+        #expect(sent.withLock { $0 } == [.noteOn(note: 60, velocity: 70, channel: 0), .noteOff(note: 60, channel: 0)])
+
+        // Stopping the copy and muting the sound are separate things.
+        synth.mirror(to: nil)
+        sent.withLock { $0 = [] }
+        voice.noteOn(.middleC, velocity: 80)
+        voice.noteOff(.middleC)
+        #expect(sent.withLock { $0.isEmpty })
+        synth.isMuted = true
+        #expect(synth.isMuted)
+        synth.isMuted = false
+        #expect(!synth.isMuted)
+        engine.stop()
+    }
 }
