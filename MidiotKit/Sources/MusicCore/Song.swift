@@ -104,9 +104,13 @@ public extension KeyboardRange {
     /// once, before starting (requirement HW-3).
     func canPlay(_ song: Song) -> Bool {
         guard let span = song.pitchSpan else { return true }
+        return canPlay(lowest: span.lowerBound, highest: span.upperBound)
+    }
+
+    func canPlay(lowest low: Pitch, highest high: Pitch) -> Bool {
         // Move the keyboard up as many octaves as possible while its lowest key stays at or
-        // below the song's lowest note, then see whether the top note is still on it.
-        let octaves = Int((Double(span.lowerBound.midiNumber - lowest.midiNumber) / 12).rounded(.down))
-        return span.upperBound.midiNumber <= highest.midiNumber + octaves * 12
+        // below the lowest note, then see whether the top note is still on it.
+        let octaves = Int((Double(low.midiNumber - lowest.midiNumber) / 12).rounded(.down))
+        return high.midiNumber <= highest.midiNumber + octaves * 12
     }
 }

@@ -9,7 +9,7 @@ let modules: [(name: String, dependencies: [Target.Dependency])] = [
     ("ScoreImport", ["MusicCore"]),
     ("Notation", ["MusicCore", .product(name: "VerovioToolkit", package: "verovio")]),
     ("Practice", ["MusicCore"]),
-    ("Library", ["MusicCore"]),
+    ("Library", ["MusicCore", "ScoreImport", "Notation"]),
     ("DesignSystem", ["MusicCore"]),
 ]
 
@@ -36,6 +36,7 @@ let package = Package(
         .testTarget(name: "DesignSystemTests", dependencies: ["DesignSystem"]),
         .testTarget(name: "SoundTests", dependencies: ["Sound"]),
         .testTarget(name: "ScoreImportTests", dependencies: ["ScoreImport"]),
+        .testTarget(name: "LibraryTests", dependencies: ["Library"]),
         .testTarget(name: "NotationTests", dependencies: ["Notation"], resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]
