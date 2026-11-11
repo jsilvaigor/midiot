@@ -36,7 +36,7 @@ let package = Package(
         .testTarget(name: "DesignSystemTests", dependencies: ["DesignSystem"]),
         .testTarget(name: "SoundTests", dependencies: ["Sound"]),
         .testTarget(name: "ScoreImportTests", dependencies: ["ScoreImport"]),
-        .testTarget(name: "LibraryTests", dependencies: ["Library"]),
+        .testTarget(name: "LibraryTests", dependencies: ["Library"], resources: [.copy("Fixtures")]),
         .testTarget(name: "PracticeTests", dependencies: ["Practice"]),
         .testTarget(name: "NotationTests", dependencies: ["Notation"], resources: [.copy("Fixtures")]),
     ],

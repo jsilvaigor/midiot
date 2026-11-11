@@ -64,7 +64,8 @@ public struct RunResult: Codable, Hashable, Sendable {
 public struct LoadedSong: Sendable {
     public let entry: SongEntry
     public let song: Song
-    /// Engraved pages; empty for MIDI imports until a sheet is generated for them.
+    /// Engraved pages. For MIDI imports this is a draft generated from the notes; it is empty
+    /// only if that draft could not be engraved.
     public let pages: [ScoreScene]
 }
 
@@ -163,7 +164,11 @@ public struct SongStore: Sendable {
         switch format {
         case .midi:
             do {
-                return (Song(midiFile: try MIDIFile(data: data), title: title), [])
+                let song = Song(midiFile: try MIDIFile(data: data), title: title)
+                // MIDI carries no notation, so a draft sheet is written and engraved from the notes.
+                let draft = Data(MusicXMLWriter.draft(from: song).utf8)
+                guard let score = try? EngravedScore(musicXML: draft, title: title) else { return (song, []) }
+                return (song.adoptingNotation(of: score.song), score.pages)
             } catch {
                 let reason = switch error {
                 case .notAMIDIFile: "This is not a MIDI file."

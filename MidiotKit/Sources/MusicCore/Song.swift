@@ -117,3 +117,31 @@ public extension KeyboardRange {
         return high.midiNumber <= highest.midiNumber + octaves * 12
     }
 }
+
+public extension Song {
+    /// This song with the notation identifiers of `engraved`, a score generated from it.
+    ///
+    /// The generated score rounds rhythms, so notes are paired by hand, pitch and nearest
+    /// start within `tolerance` beats. Timing stays this song's own.
+    func adoptingNotation(of engraved: Song, tolerance: Double = 0.26) -> Song {
+        var available = engraved.notes
+        let linked = notes.map { note -> Note in
+            var note = note
+            let match = available.indices
+                .filter { available[$0].pitch == note.pitch && available[$0].hand == note.hand
+                    && abs(available[$0].start - note.start) <= tolerance }
+                .min { abs(available[$0].start - note.start) < abs(available[$1].start - note.start) }
+            if let match {
+                note.notationID = available[match].notationID
+                available.remove(at: match)
+            }
+            return note
+        }
+        let bars = measures.enumerated().map { index, measure -> Measure in
+            var measure = measure
+            if index < engraved.measures.count { measure.notationID = engraved.measures[index].notationID }
+            return measure
+        }
+        return Song(title: title, notes: linked, tempoMap: tempoMap, measures: bars)
+    }
+}

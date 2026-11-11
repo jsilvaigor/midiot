@@ -34,7 +34,10 @@ import Testing
 
         let loaded = try store.load(entry)
         #expect(loaded.song.notes.map(\.pitch.midiNumber) == [60, 84])
-        #expect(loaded.pages.isEmpty)
+        // A draft sheet is generated, and every note is linked to its notehead.
+        #expect(loaded.pages.count == 1)
+        #expect(loaded.song.notes.allSatisfy { $0.notationID.map { loaded.pages[0].frames[$0] != nil } == true })
+        #expect(loaded.song.measures.allSatisfy { $0.notationID != nil })
 
         #expect(store.runs(for: entry).isEmpty)
         let run = RunResult(
@@ -62,5 +65,28 @@ import Testing
         try Data("hello".utf8).write(to: broken)
         #expect(throws: SongStore.StoreError.unreadable("This is not a MIDI file.")) { try store.importFile(at: broken) }
         #expect(store.entries().isEmpty)
+    }
+}
+
+@Suite struct DraftSheetTests {
+    @Test func midiImportGetsAReadableLinkedSheet() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("midiot-tests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let store = SongStore(root: folder)
+        let url = try #require(Bundle.module.url(forResource: "waltz", withExtension: "mid", subdirectory: "Fixtures"))
+        let loaded = try store.load(try store.importFile(at: url))
+
+        // Timing is the performance's own, not rounded.
+        #expect(loaded.song.notes.count == 19)
+        #expect(loaded.song.measures.count == 4)
+        #expect(loaded.song.measures.allSatisfy { $0.length == 3 })
+        #expect(loaded.song.tempoMap.bpm(atBeat: 0) == 100)
+        #expect(loaded.song.notes[0].start != 0)
+
+        // Every played note is found on the page, including the one tied over the barline.
+        let frames = try #require(loaded.pages.first).frames
+        let unlinked = loaded.song.notes.filter { $0.notationID.map { frames[$0] != nil } != true }
+        #expect(unlinked.isEmpty)
+        #expect(Set(loaded.song.notes.compactMap(\.notationID)).count == 19)
     }
 }
