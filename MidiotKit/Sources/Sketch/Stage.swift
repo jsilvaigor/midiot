@@ -21,11 +21,15 @@ public struct StagePreset: Codable, Hashable, Sendable {
     public var second: Second?
     /// Tempo the recorded layer plays at; nil is the tempo it was recorded at.
     public var bpm: Double?
+    /// MIDI channel, 0...15, that plays the main sound outside the app: the keyboard goes
+    /// to MIDI out on it and the built-in sound stays quiet. Nil is the app's own sound.
+    public var externalChannel: Int?
 
-    public init(program: Int? = nil, second: Second? = nil, bpm: Double? = nil) {
+    public init(program: Int? = nil, second: Second? = nil, bpm: Double? = nil, externalChannel: Int? = nil) {
         self.program = program
         self.second = second
         self.bpm = bpm
+        self.externalChannel = externalChannel
     }
 }
 

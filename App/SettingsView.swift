@@ -63,8 +63,11 @@ struct SettingsView: View {
             } header: {
                 Text("MIDI out")
             } footer: {
-                Text("Everything Midiot plays is sent as well: the piano and the Sketchpad's sound on channel 1, recorded layers on channels 2 to 9, and the Stage's sounds on channels 12 and 13. The metronome is not sent.")
-                    .font(.sans(12)).foregroundStyle(Palette.textSecondary)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Everything Midiot plays is sent as well: the piano and the Sketchpad's sound on channel 1, recorded layers on channels 2 to 9, and the Stage's sounds on channels 12 and 13. The metronome is not sent.")
+                    Text("A Stage cue can instead play only through MIDI out, on a channel of its own. Channels 1 to 9, 12, 13 and 16 are used by Midiot's own sounds.")
+                }
+                .font(.sans(12)).foregroundStyle(Palette.textSecondary)
             }
 
             Section {

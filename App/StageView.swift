@@ -211,6 +211,21 @@ struct StageView: View {
             } menu: {
                 splitMenu(preset)
             }
+            editable {
+                tile("Plays on") {
+                    if let channel = preset.externalChannel {
+                        if model.isOutOn {
+                            Text("MIDI out · ch \(channel + 1)")
+                        } else {
+                            Text("MIDI out is off").foregroundStyle(Palette.textSecondary)
+                        }
+                    } else {
+                        Text("Midiot")
+                    }
+                }
+            } menu: {
+                playsOnMenu(preset)
+            }
             tile("Tempo") {
                 HStack(spacing: 10) {
                     if let bpm = preset.bpm ?? cue.bestTake?.bpm {
@@ -286,6 +301,15 @@ struct StageView: View {
                     Toggle(SketchNames.sound(sound), isOn: Binding(get: { sound.program == selected }, set: { _ in pick(sound.program) }))
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func playsOnMenu(_ preset: StagePreset) -> some View {
+        Toggle("Midiot", isOn: Binding(get: { preset.externalChannel == nil }, set: { _ in model.updatePreset { $0.externalChannel = nil } }))
+        Divider()
+        ForEach(0..<16, id: \.self) { channel in
+            Toggle("MIDI out, channel \(channel + 1)", isOn: Binding(get: { preset.externalChannel == channel }, set: { _ in model.updatePreset { $0.externalChannel = channel } }))
         }
     }
 

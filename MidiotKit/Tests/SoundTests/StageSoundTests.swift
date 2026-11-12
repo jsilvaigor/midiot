@@ -143,6 +143,18 @@ extension SoundTests {
         piano.voice(channel: 2).noteOff(.middleC)
         #expect(sent.withLock { $0 } == [.noteOn(note: 60, velocity: 70, channel: 0), .noteOff(note: 60, channel: 0)])
 
+        // Tens of thousands of notes later the copy still works: reading the sink must not
+        // make it any deeper to call.
+        let count = Mutex(0)
+        piano.mirror(to: { _ in count.withLock { $0 += 1 } }, channel: 0)
+        Thread.detachNewThread {
+            for _ in 0..<50_000 { piano.noteOff(.middleC) }
+            count.withLock { $0 += 1_000_000 }
+        }
+        while count.withLock({ $0 }) < 1_000_000 { Thread.sleep(forTimeInterval: 0.01) }
+        #expect(count.withLock { $0 } == 1_050_000)
+        piano.mirror(to: nil)
+
         // Stopping the copy and muting the sound are separate things.
         synth.mirror(to: nil)
         sent.withLock { $0 = [] }

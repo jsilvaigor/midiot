@@ -66,6 +66,9 @@ public final class DeviceManager {
                 receiver: .events { [weak self] events, timeStamp, source in
                     let device = source?.device
                     let profile = DeviceProfile.matching(deviceName: device?.name ?? source?.name ?? "")
+                    // Another copy of the app offering its port is not a keyboard either; two
+                    // copies listening to each other would pass every note back and forth.
+                    if device == nil, source?.name == Self.portName { return }
                     if let loop = self?.loopback.withLock({ $0 }),
                        loop == LoopbackPort(name: source?.name ?? "", deviceID: device?.uniqueID) { return }
                     // The Launchkey's DAW port reports its buttons and knobs; nothing on it is playing.
@@ -101,6 +104,7 @@ public final class DeviceManager {
         var seen = Set<Int32>()
         var found: [ConnectedDevice] = []
         for endpoint in manager.endpoints.outputsUnowned {
+            if endpoint.device == nil, endpoint.name == Self.portName { continue }
             let id = endpoint.device?.uniqueID ?? endpoint.uniqueID
             guard seen.insert(id).inserted else { continue }
             let name = endpoint.device?.name ?? endpoint.name
@@ -117,6 +121,8 @@ public final class DeviceManager {
 
     // MARK: MIDI out (requirement SN-3)
 
+    /// Name of the port offered to other apps.
+    nonisolated static let portName = "Midiot"
     private static let outTag = "midi out"
     private static let virtualOutTag = "midi out for other apps"
 
@@ -138,7 +144,7 @@ public final class DeviceManager {
             case .off:
                 break
             case .otherApps:
-                try manager.addOutput(name: "Midiot", tag: Self.virtualOutTag, uniqueID: .userDefaultsManaged(key: "midiOutPortID"))
+                try manager.addOutput(name: Self.portName, tag: Self.virtualOutTag, uniqueID: .userDefaultsManaged(key: "midiOutPortID"))
                 out.use(manager.managedOutputs[Self.virtualOutTag])
             case let .destination(id, _):
                 // The connection comes back by itself when the port is unplugged and returns.

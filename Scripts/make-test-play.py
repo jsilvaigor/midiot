@@ -93,6 +93,8 @@ scenes = [
             "CHECK: the name shrinks onto one line and this note wraps to at most three lines without pushing the tiles or the pads off the screen, even in a small window. "
             "Timpani below F3, celesta above.",
             stage={"program": 8, "second": {"program": 47, "splitAt": 53}}, status="sketch"),
+        cue("Plays on MIDI out", "CHECK: tile reads MIDI out · ch 14. The keys play only at the other end (channel 14, program 48), never in Midiot. With MIDI out off in Settings the tile reads MIDI out is off and the keys fall back to Midiot's own strings.",
+            stage={"program": 48, "externalChannel": 13}),
     ]),
     ("4 · Ends", [
         cue("Lock", "CHECK: locked, clicking a cue in the list or Exit stage does nothing. Hold the lock to open it: tiles become menus, Tempo gets − and +, the list jumps. Change the sound, lock again."),
