@@ -129,6 +129,64 @@ import Testing
         MIDIClientDispose(client)
     }
 
+    /// The port the app offers to other apps must not be heard by the app itself: what it
+    /// played would be played again, sent again, and so on for ever.
+    @MainActor @Test func theAppDoesNotHearItsOwnPort() async throws {
+        let heard = Mutex(0)
+        let manager = DeviceManager()
+        manager.start(onEvent: { [out = manager.out] event in
+            heard.withLock { $0 += 1 }
+            // What the app does with playing while MIDI out is on.
+            if case let .noteOn(pitch, velocity) = event.kind { out.noteOn(pitch.midiNumber, velocity: velocity, channel: 0) }
+        })
+        manager.setOutput(.otherApps)
+        try await Task.sleep(for: .milliseconds(300))
+        manager.out.noteOn(60, velocity: 100, channel: 0)
+        manager.out.noteOff(60, channel: 0)
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(heard.withLock { $0 } == 0)
+        #expect(!manager.devices.contains { $0.name == "Midiot" })
+        manager.setOutput(.off)
+    }
+
+    /// Another app listening to the port named Midiot receives what the app plays.
+    @MainActor @Test func otherAppsHearThePort() async throws {
+        let manager = DeviceManager()
+        manager.start(onEvent: { _ in })
+        manager.setOutput(.otherApps)
+        try await Task.sleep(for: .milliseconds(300))
+
+        let words = Mutex<[UInt32]>([])
+        var client = MIDIClientRef()
+        MIDIClientCreateWithBlock("MidiotListenerTests" as CFString, &client, nil)
+        let port = Self.listener(client: client) { new in words.withLock { $0 += new } }
+        var found = 0
+        for index in 0..<MIDIGetNumberOfSources() {
+            let source = MIDIGetSource(index)
+            var name: Unmanaged<CFString>?
+            MIDIObjectGetStringProperty(source, kMIDIPropertyName, &name)
+            guard name?.takeRetainedValue() as String? == "Midiot" else { continue }
+            MIDIPortConnectSource(port, source, nil)
+            found += 1
+        }
+        #expect(found >= 1)
+
+        manager.out.noteOn(61, velocity: 99, channel: 4)
+        try await wait { words.withLock { $0.contains(0x2094_3D63) } }
+
+        manager.setOutput(.off)
+        MIDIPortDispose(port)
+        MIDIClientDispose(client)
+    }
+
+    private nonisolated static func listener(client: MIDIClientRef, receive: @escaping @Sendable ([UInt32]) -> Void) -> MIDIPortRef {
+        var port = MIDIPortRef()
+        MIDIInputPortCreateWithProtocol(client, "listener" as CFString, ._1_0, &port) { list, _ in
+            for packet in list.unsafeSequence() { receive(Array(packet.sequence())) }
+        }
+        return port
+    }
+
     /// A virtual MIDI destination. Made outside the main actor because it is called on the
     /// MIDI thread.
     private nonisolated static func destination(
