@@ -114,7 +114,7 @@ final class AppModel {
             store: PlayStore(root: store.root.deletingLastPathComponent().appendingPathComponent("Plays", isDirectory: true)),
             capture: capture, piano: piano, palette: palette, clicks: clicks, keyboard: keyboard
         )
-        stage = StageModel(sketchpad: sketchpad, piano: piano, palette: palette, keyboard: keyboard)
+        stage = StageModel(sketchpad: sketchpad, piano: piano, palette: palette, keyboard: keyboard, devices: devices)
     }
     @ObservationIgnored private var isStarted = false
 
@@ -178,7 +178,9 @@ final class AppModel {
             Task { @MainActor in self?.handle(event) }
         }
         followPadLights()
-        if let saved = UserDefaults.standard.data(forKey: "midiOut").flatMap({ try? JSONDecoder().decode(MIDIOutChoice.self, from: $0) }) {
+        // Rendering screenshots must not send notes to whatever is listening.
+        if !ProcessInfo.processInfo.arguments.contains("-snapshot"),
+           let saved = UserDefaults.standard.data(forKey: "midiOut").flatMap({ try? JSONDecoder().decode(MIDIOutChoice.self, from: $0) }) {
             setMIDIOut(saved)
         }
         NotificationCenter.default.addObserver(
@@ -200,11 +202,13 @@ final class AppModel {
         UserDefaults.standard.set(try? JSONEncoder().encode(choice), forKey: "midiOut")
         devices.setOutput(choice)
         applyMIDIOut()
+        stage.outputChanged()
         // A port that was only just opened can miss the sounds chosen so far; say them again.
         Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(400))
             guard let self, self.midiOut == choice else { return }
             self.applyMIDIOut()
+            self.stage.outputChanged()
         }
     }
 

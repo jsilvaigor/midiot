@@ -1,6 +1,7 @@
 import Foundation
 import MusicCore
 import Observation
+import MidiIO
 import Practice
 import Sketch
 import Sound
@@ -28,6 +29,7 @@ final class StageModel {
     @ObservationIgnored private let piano: SamplerInstrument
     @ObservationIgnored private let palette: PaletteSynth
     @ObservationIgnored private let keyboard: LiveSound
+    @ObservationIgnored private let devices: DeviceManager
     @ObservationIgnored private var isActive = false
     @ObservationIgnored private var playback: Playback?
     @ObservationIgnored private var ticker: Task<Void, Never>?
@@ -53,11 +55,12 @@ final class StageModel {
         static let layers = Array(1...8)
     }
 
-    init(sketchpad: SketchpadModel, piano: SamplerInstrument, palette: PaletteSynth, keyboard: LiveSound) {
+    init(sketchpad: SketchpadModel, piano: SamplerInstrument, palette: PaletteSynth, keyboard: LiveSound, devices: DeviceManager) {
         self.sketchpad = sketchpad
         self.piano = piano
         self.palette = palette
         self.keyboard = keyboard
+        self.devices = devices
     }
 
     // MARK: Cue sheet (requirement LV-1)
@@ -121,6 +124,13 @@ final class StageModel {
         recall()
     }
 
+    /// True while MIDI out is on, so a cue routed to it can be heard elsewhere.
+    var isOutOn: Bool { devices.outChoice != .off }
+
+    /// Call when MIDI out is pointed somewhere else or switched off: cues routed to it move
+    /// between the other end and the app's own sound.
+    func outputChanged() { recall() }
+
     /// Points the keyboard at the current cue's sound, split or layer.
     private func recall() {
         guard isActive, !isChoosing else { return }
@@ -128,7 +138,7 @@ final class StageModel {
             keyboard.use(piano)
             return
         }
-        let main = instrument(program: preset.program, channel: Channel.main)
+        let main = mainInstrument(preset)
         if let second = preset.second {
             keyboard.use(SplitInstrument(
                 main: main, second: instrument(program: second.program, channel: Channel.second),
@@ -137,6 +147,17 @@ final class StageModel {
         } else {
             keyboard.use(main)
         }
+    }
+
+    /// The main sound: the app's own, or the other end of MIDI out when the cue is routed
+    /// there and MIDI out is on. A routed cue never sounds in the app, so it is not sent twice.
+    private func mainInstrument(_ preset: StagePreset) -> any Instrument {
+        guard let channel = preset.externalChannel, isOutOn else {
+            return instrument(program: preset.program, channel: Channel.main)
+        }
+        let external = ExternalInstrument(out: devices.out, channel: min(max(channel, 0), 15))
+        if let program = preset.program { external.program(program) }
+        return external
     }
 
     private func instrument(program: Int?, channel: Int) -> any Instrument {

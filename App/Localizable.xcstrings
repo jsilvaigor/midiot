@@ -393,6 +393,16 @@
         }
       }
     },
+    "A Stage cue can instead play only through MIDI out, on a channel of its own. Channels 1 to 9, 12, 13 and 16 are used by Midiot's own sounds." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma deixa do Palco pode, em vez disso, tocar só pela saída MIDI, em um canal próprio. Os canais 1 a 9, 12, 13 e 16 são usados pelos sons do próprio Midiot."
+          }
+        }
+      }
+    },
     "A surprise turn" : {
       "localizations" : {
         "pt-BR" : {
@@ -2400,6 +2410,36 @@
         }
       }
     },
+    "MIDI out is off" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A saída MIDI está desligada"
+          }
+        }
+      }
+    },
+    "MIDI out · ch %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saída MIDI · canal %lld"
+          }
+        }
+      }
+    },
+    "MIDI out, channel %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saída MIDI, canal %lld"
+          }
+        }
+      }
+    },
     "Midiot already allows for the output delay. Raise this if notes you play on time are marked late; lower it if they are marked early." : {
       "localizations" : {
         "pt-BR" : {
@@ -3325,6 +3365,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toque a ideia e depois pressione “Guardar últimos 30 s” abaixo. O app esteve ouvindo o tempo todo."
+          }
+        }
+      }
+    },
+    "Plays on" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca em"
           }
         }
       }

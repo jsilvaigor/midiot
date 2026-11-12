@@ -24,13 +24,21 @@ public enum ChannelMessage: Hashable, Sendable {
 final class MIDIMirror: Sendable {
     typealias Sink = @Sendable (ChannelMessage) -> Void
 
-    private let sink = Mutex<Sink?>(nil)
+    /// The sink is kept inside an object, not as a bare closure: a closure stored directly in
+    /// a `Mutex` gains a wrapper every time it is read, until calling it overflows the stack.
+    private final class Holder: Sendable {
+        let sink: Sink
+        init(_ sink: @escaping Sink) { self.sink = sink }
+    }
+
+    private let holder = Mutex<Holder?>(nil)
 
     func set(_ new: Sink?) {
-        sink.withLock { $0 = new }
+        let boxed = new.map(Holder.init)
+        holder.withLock { $0 = boxed }
     }
 
     func send(_ message: ChannelMessage) {
-        sink.withLock { $0 }?(message)
+        holder.withLock { $0 }?.sink(message)
     }
 }

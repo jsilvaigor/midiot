@@ -31,6 +31,24 @@ import Testing
         #expect(store.plays().first?.scenes[0].cues[0].stage == preset)
     }
 
+    @Test func presetsWithoutAnExternalChannelLoadAndStayAsTheyWere() throws {
+        let old = #"{"program":48,"bpm":90}"#
+        let preset = try JSONDecoder().decode(StagePreset.self, from: Data(old.utf8))
+        #expect(preset == StagePreset(program: 48, bpm: 90))
+        #expect(preset.externalChannel == nil)
+        let json = try String(decoding: JSONEncoder().encode(preset), as: UTF8.self)
+        #expect(!json.contains("externalChannel"))
+    }
+
+    @Test func anExternalChannelSurvivesSaving() throws {
+        let preset = StagePreset(program: 5, externalChannel: 13)
+        let data = try JSONEncoder().encode(preset)
+        let back = try JSONDecoder().decode(StagePreset.self, from: data)
+        #expect(back == preset)
+        #expect(back.externalChannel == 13)
+        #expect(preset != StagePreset(program: 5))
+    }
+
     @Test func theCueSheetRunsThroughScenesInOrder() {
         let play = Play(title: "Dream", scenes: [
             PlayScene(title: "One", cues: [Cue(name: "a"), Cue(name: "b")]),

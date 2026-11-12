@@ -187,6 +187,39 @@ import Testing
         return port
     }
 
+    /// Notes are sent from the MIDI thread and other small-stack threads, not only from main.
+    @MainActor @Test func sendingFromABackgroundThread() async throws {
+        let manager = DeviceManager()
+        manager.start(onEvent: { _ in })
+        manager.setOutput(.otherApps)
+        try await Task.sleep(for: .milliseconds(300))
+        let done = Mutex(false)
+        DispatchQueue(label: "small stack").async { [out = manager.out] in
+            for note in 60..<72 { out.noteOn(note, velocity: 90, channel: 0); out.noteOff(note, channel: 0) }
+            done.withLock { $0 = true }
+        }
+        try await wait { done.withLock { $0 } }
+        manager.setOutput(.off)
+    }
+
+    /// Two copies of the app, each offering its port, must not take each other for keyboards.
+    @MainActor @Test func twoCopiesDoNotHearEachOther() async throws {
+        let heard = Mutex(0)
+        let first = DeviceManager(), second = DeviceManager()
+        first.start(onEvent: { _ in heard.withLock { $0 += 1 } })
+        second.start(onEvent: { _ in })
+        first.setOutput(.otherApps)
+        second.setOutput(.otherApps)
+        try await Task.sleep(for: .milliseconds(300))
+        second.out.noteOn(60, velocity: 100, channel: 0)
+        second.out.noteOff(60, channel: 0)
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(heard.withLock { $0 } == 0)
+        #expect(!first.devices.contains { $0.name == "Midiot" })
+        first.setOutput(.off)
+        second.setOutput(.off)
+    }
+
     /// A virtual MIDI destination. Made outside the main actor because it is called on the
     /// MIDI thread.
     private nonisolated static func destination(
