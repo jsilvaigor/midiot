@@ -61,6 +61,8 @@ public final class DeviceManager {
             try manager.addInputConnection(
                 to: .allOutputs,
                 tag: "keyboards",
+                // Not the app's own port: what it sends there must not come back as playing.
+                filter: .owned(),
                 receiver: .events { [weak self] events, timeStamp, source in
                     let device = source?.device
                     let profile = DeviceProfile.matching(deviceName: device?.name ?? source?.name ?? "")
@@ -98,7 +100,7 @@ public final class DeviceManager {
         // A device can expose several ports (the Launchkey has two); list each device once.
         var seen = Set<Int32>()
         var found: [ConnectedDevice] = []
-        for endpoint in manager.endpoints.outputs {
+        for endpoint in manager.endpoints.outputsUnowned {
             let id = endpoint.device?.uniqueID ?? endpoint.uniqueID
             guard seen.insert(id).inserted else { continue }
             let name = endpoint.device?.name ?? endpoint.name
