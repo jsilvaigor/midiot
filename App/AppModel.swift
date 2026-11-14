@@ -26,6 +26,7 @@ final class AppModel {
         didSet {
             if (oldValue == .sketchpad) != (section == .sketchpad) { sketchpad.setActive(section == .sketchpad) }
             if (oldValue == .stage) != (section == .stage) { stage.setActive(section == .stage) }
+            if section != .stage { applyWaitingPlays() }
         }
     }
     /// Plays, cues and takes (milestone 3).
@@ -38,6 +39,10 @@ final class AppModel {
     }
     /// The action waiting for a pad or knob to be touched, while MIDI learn is on.
     var learning: ControlAction?
+    /// Plays shared with the user's other devices through iCloud.
+    let cloud = CloudPlays()
+    /// Set when plays changed elsewhere while a performance was on; applied once it is over.
+    @ObservationIgnored private var hasWaitingPlays = false
     /// Where the app also sends what it plays (requirement SN-3).
     private(set) var midiOut = MIDIOutChoice.off
     /// With MIDI out on: keep the app's own instruments quiet so only the other one is heard.
@@ -121,6 +126,13 @@ final class AppModel {
     func start() {
         guard !isStarted else { return }
         isStarted = true
+        if Platform.isPad {
+            // The iPad opens where it is used: on the Sketchpad. A launch argument can pick
+            // another section, for taking screenshots in the simulator.
+            let arguments = ProcessInfo.processInfo.arguments
+            let asked = arguments.firstIndex(of: "-section").flatMap { arguments.indices.contains($0 + 1) ? AppSection(rawValue: arguments[$0 + 1]) : nil }
+            section = asked ?? .sketchpad
+        }
 
         songs = store.entries()
         if let data = try? Data(contentsOf: logURL), let saved = try? JSONDecoder().decode(PracticeLog.self, from: data) { log = saved }
@@ -128,6 +140,9 @@ final class AppModel {
         trackPracticeTime()
         seedStarterSongsIfNeeded()
         sketchpad.load()
+        #if DEBUG && os(iOS)
+        applySimulatorAids()
+        #endif
         audio.attach(piano)
         audio.attach(clicks)
         audio.attach(palette)
@@ -143,10 +158,11 @@ final class AppModel {
         // Large SoundFonts take seconds to load; keep the window responsive meanwhile.
         let bank = SoundBank.piano()
         let paletteBank = SoundBank.palette()
+        let clickBank = SoundBank.clicks()
         Task.detached(priority: .userInitiated) { [piano, clicks, palette] in
             let status: SoundStatus
             // The metronome uses the drum kit built into macOS; without it the app still works.
-            try? clicks.load(.system, percussion: true)
+            try? clicks.load(clickBank, percussion: true)
             try? palette.load(paletteBank)
             do {
                 try piano.load(bank)
@@ -178,19 +194,50 @@ final class AppModel {
             Task { @MainActor in self?.handle(event) }
         }
         followPadLights()
+        startCloud()
         // Rendering screenshots must not send notes to whatever is listening.
         if !ProcessInfo.processInfo.arguments.contains("-snapshot"),
            let saved = UserDefaults.standard.data(forKey: "midiOut").flatMap({ try? JSONDecoder().decode(MIDIOutChoice.self, from: $0) }) {
             setMIDIOut(saved)
         }
         NotificationCenter.default.addObserver(
-            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+            forName: Platform.willTerminate, object: nil, queue: .main
         ) { [devices] _ in
             MainActor.assumeIsolated {
                 devices.releasePadLights()
                 devices.out.silence()
             }
         }
+    }
+
+    // MARK: iCloud
+
+    private func startCloud() {
+        // Screenshot runs and tests work in folders of their own.
+        guard !ProcessInfo.processInfo.arguments.contains("-snapshot") else { return }
+        cloud.start(
+            local: sketchpad.localStore, deviceName: Platform.deviceName,
+            otherDeviceName: String(localized: "other device"),
+            onReady: { [weak self] store in self?.sketchpad.use(store) },
+            onChange: { [weak self] in self?.playsChangedElsewhere() }
+        )
+    }
+
+    private func playsChangedElsewhere() {
+        // Cues must not move under a performance: wait until the stage is left or back at
+        // its list of plays.
+        if section == .stage, !stage.isChoosing {
+            hasWaitingPlays = true
+        } else {
+            sketchpad.reload()
+        }
+    }
+
+    /// Call when a performance is over.
+    func applyWaitingPlays() {
+        guard hasWaitingPlays else { return }
+        hasWaitingPlays = false
+        sketchpad.reload()
     }
 
     // MARK: MIDI out (requirement SN-3)

@@ -10,6 +10,8 @@ struct RootView: View {
         if model.section == .stage {
             // The stage takes the whole window: nothing but the performance (requirement LV-4).
             StageView(model: model.stage)
+        } else if Platform.isPad {
+            padLayout
         } else {
             splitView
         }
@@ -21,22 +23,40 @@ struct RootView: View {
             SidebarView(selection: $model.section, devices: deviceStatuses)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
-            switch model.section {
-            case .today:
-                TodayView()
-            case .library:
-                LibraryView()
-            case .practice:
-                PracticeView()
-            case .chords:
-                ChordsView()
-            case .sketchpad:
-                SketchpadView(model: model.sketchpad)
-            case .stage:
-                EmptyView()
-            case .settings:
-                SettingsView()
-            }
+            detail
+        }
+    }
+
+    /// The iPad's sidebar is always there and always the same width. The system split view
+    /// overlaid the detail on a smaller iPad and put its toggle button over the wordmark.
+    private var padLayout: some View {
+        @Bindable var model = model
+        return HStack(spacing: 0) {
+            SidebarView(selection: $model.section, devices: deviceStatuses)
+                .frame(width: 196)
+            Palette.hairline.frame(width: 1).ignoresSafeArea()
+            detail.frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(Palette.background.ignoresSafeArea())
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        switch model.section {
+        case .today:
+            TodayView()
+        case .library:
+            LibraryView()
+        case .practice:
+            PracticeView()
+        case .chords:
+            ChordsView()
+        case .sketchpad:
+            SketchpadView(model: model.sketchpad)
+        case .stage:
+            EmptyView()
+        case .settings:
+            SettingsView()
         }
     }
 }
@@ -63,9 +83,12 @@ struct SidebarView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 SidebarHeading("Learn")
-                item(.today)
-                item(.library)
-                item(.practice)
+                // Practicing from sheet music stays on the Mac; the iPad keeps the chord sheet.
+                if !Platform.isPad {
+                    item(.today)
+                    item(.library)
+                    item(.practice)
+                }
                 item(.chords)
             }
 

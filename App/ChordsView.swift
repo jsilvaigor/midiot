@@ -49,7 +49,8 @@ struct ChordsView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Chords").font(.display).foregroundStyle(Palette.textPrimary)
-            Text("Pick a root. Every card shows the keys to press; click one to hear it.")
+            (Platform.isPad ? Text("Pick a root. Every card shows the keys to press; tap one to hear it.")
+                : Text("Pick a root. Every card shows the keys to press; click one to hear it."))
                 .font(.bodyText).foregroundStyle(Palette.textSecondary)
         }
     }
@@ -65,7 +66,7 @@ struct ChordsView: View {
                         Text(verbatim: rootName(pitchClass))
                             .font(.sans(14, weight: isOn ? .semibold : .regular))
                             .foregroundStyle(isOn ? Palette.accentInk : Palette.textPrimary)
-                            .frame(minWidth: 26).padding(.horizontal, 10).frame(height: 40)
+                            .frame(minWidth: 26).padding(.horizontal, 10).frame(height: Platform.touch(40))
                             .background(isOn ? Palette.accent : Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(isOn ? .clear : Palette.hairline))
                             .contentShape(Rectangle())

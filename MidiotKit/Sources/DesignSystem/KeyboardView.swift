@@ -37,12 +37,21 @@ public struct KeyboardView: View {
             Canvas { context, _ in
                 draw(in: &context, layout: layout)
             }
+            #if os(macOS)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in moveMouse(to: layout.pitch(at: value.location)) }
                     .onEnded { _ in moveMouse(to: nil) },
                 isEnabled: onPress != nil
             )
+            #else
+            // The touch layer reads the same layout as the drawing, so keys and fingers agree.
+            .overlay {
+                if let onPress, let onRelease {
+                    KeyboardTouchLayer(layout: layout, onPress: onPress, onRelease: onRelease)
+                }
+            }
+            #endif
         }
         .clipShape(.rect(bottomLeadingRadius: Radius.control, bottomTrailingRadius: Radius.control))
         .accessibilityLabel(Text(verbatim: "Keyboard"))

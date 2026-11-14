@@ -15,4 +15,6 @@ xcuserdata/
 
 # Piano samples, fetched by Scripts/fetch-soundfonts.sh
 Resources/SoundFonts/*.sf2
+Resources/SoundFontsPad/*.sf2
+build-pad/
 .soundfont-download/

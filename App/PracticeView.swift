@@ -105,7 +105,7 @@ struct PracticeView: View {
             ink: Palette.textPrimary, accent: Palette.accent,
             noteColors: colors, loopBars: session.loopBars,
             position: { session.beat },
-            onTapMeasure: { session.tappedMeasure($0, extend: NSEvent.modifierFlags.contains(.shift)) }
+            onTapMeasure: { session.tappedMeasure($0, extend: Platform.isShiftDown) }
         )
         .padding(.horizontal, Spacing.l)
         .padding(.vertical, Spacing.s)

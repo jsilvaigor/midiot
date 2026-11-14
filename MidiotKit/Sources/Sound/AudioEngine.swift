@@ -60,6 +60,7 @@ public final class AudioEngine: @unchecked Sendable {
         return Latency(buffer: buffer, device: engine.outputNode.presentationLatency)
     }
 
+    #if os(macOS)
     private func applyBufferSize() {
         guard let unit = engine.outputNode.audioUnit else { return }
         var frames = Self.preferredBufferFrames
@@ -77,4 +78,20 @@ public final class AudioEngine: @unchecked Sendable {
         AudioUnitGetProperty(unit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0, &frames, &size)
         return frames
     }
+    #else
+    /// On the iPad the audio session owns the buffer: ask it for a short one and to keep
+    /// playing with the silent switch on.
+    private func applyBufferSize() {
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .default)
+        let sampleRate = session.sampleRate > 0 ? session.sampleRate : 44_100
+        try? session.setPreferredIOBufferDuration(Double(Self.preferredBufferFrames) / sampleRate)
+        try? session.setActive(true)
+    }
+
+    private func currentBufferFrames() -> UInt32 {
+        let session = AVAudioSession.sharedInstance()
+        return UInt32((session.ioBufferDuration * session.sampleRate).rounded())
+    }
+    #endif
 }

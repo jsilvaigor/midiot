@@ -26,13 +26,29 @@ public struct SoundBank: Hashable, Sendable {
             let name = url.deletingPathExtension().lastPathComponent.lowercased()
             return name.contains("generaluser") || name.hasPrefix("gm") || name.contains("general midi")
         }
-        let match = urls.sorted { $0.lastPathComponent < $1.lastPathComponent }.first { isGeneralMIDI($0) == isPalette }
-        return match.map { SoundBank(url: $0, isSystemFallback: false) } ?? .system
+        let sorted = urls.sorted { $0.lastPathComponent < $1.lastPathComponent }
+        if let match = sorted.first(where: { isGeneralMIDI($0) == isPalette }) {
+            return SoundBank(url: match, isSystemFallback: false)
+        }
+        if hasSystemSounds { return .system }
+        // The iPad has no built-in set and bundles one General MIDI SoundFont for everything.
+        return sorted.first.map { SoundBank(url: $0, isSystemFallback: false) } ?? .system
     }
 
+    /// The bank with the drum kit the metronome clicks on: the macOS built-in sounds, else
+    /// the bundled General MIDI set.
+    public static func clicks(in bundle: Bundle = .main) -> SoundBank {
+        hasSystemSounds ? .system : palette(in: bundle)
+    }
+
+    /// False on the iPad, which has no General MIDI set of its own.
+    static var hasSystemSounds: Bool { FileManager.default.fileExists(atPath: system.url.path) }
+
     private static func bundled(in bundle: Bundle) -> [URL] {
-        (bundle.urls(forResourcesWithExtension: "sf2", subdirectory: nil) ?? [])
-            + (bundle.urls(forResourcesWithExtension: "sf2", subdirectory: "SoundFonts") ?? [])
+        // "SoundFontsPad" is the folder the iPad app carries instead of "SoundFonts".
+        [nil, "SoundFonts", "SoundFontsPad"].flatMap {
+            bundle.urls(forResourcesWithExtension: "sf2", subdirectory: $0) ?? []
+        }
     }
 
     public static let system = SoundBank(
