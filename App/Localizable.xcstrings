@@ -1,7 +1,39 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {},
+    "" : {
+
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
+    "%@ · left hand" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · mão esquerda"
+          }
+        }
+      }
+    },
+    "%@ · right hand" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · mão direita"
+          }
+        }
+      }
+    },
     "%@ (not connected)" : {
       "localizations" : {
         "pt-BR" : {
@@ -78,36 +110,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Escala de %@ menor"
-          }
-        }
-      }
-    },
-    "%@ · %@" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · %@"
-          }
-        }
-      }
-    },
-    "%@ · left hand" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · mão esquerda"
-          }
-        }
-      }
-    },
-    "%@ · right hand" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · mão direita"
           }
         }
       }
@@ -262,16 +264,6 @@
         }
       }
     },
-    "%lld%% tempo" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld%% do andamento"
-          }
-        }
-      }
-    },
     "%lld–%lld bpm" : {
       "localizations" : {
         "pt-BR" : {
@@ -282,7 +274,19 @@
         }
       }
     },
-    "0:00" : {},
+    "%lld%% tempo" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld%% do andamento"
+          }
+        }
+      }
+    },
+    "0:00" : {
+
+    },
     "1 cue" : {
       "localizations" : {
         "pt-BR" : {
@@ -593,6 +597,16 @@
         }
       }
     },
+    "Bar · Beat" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compasso · Tempo"
+          }
+        }
+      }
+    },
     "Bar %lld" : {
       "localizations" : {
         "pt-BR" : {
@@ -609,16 +623,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compasso a compasso"
-          }
-        }
-      }
-    },
-    "Bar · Beat" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compasso · Tempo"
           }
         }
       }
@@ -703,22 +707,22 @@
         }
       }
     },
-    "Both hands" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duas mãos"
-          }
-        }
-      }
-    },
     "both hands" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "duas mãos"
+          }
+        }
+      }
+    },
+    "Both hands" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duas mãos"
           }
         }
       }
@@ -809,6 +813,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trocar de peça"
+          }
+        }
+      }
+    },
+    "Checking…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando…"
           }
         }
       }
@@ -2119,22 +2133,22 @@
         }
       }
     },
-    "Left hand" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mão esquerda"
-          }
-        }
-      }
-    },
     "left hand" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "mão esquerda"
+          }
+        }
+      }
+    },
+    "Left hand" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mão esquerda"
           }
         }
       }
@@ -2389,7 +2403,9 @@
         }
       }
     },
-    "MIDI" : {},
+    "MIDI" : {
+
+    },
     "MIDI (.mid) or MusicXML (.musicxml, .mxl)." : {
       "localizations" : {
         "pt-BR" : {
@@ -2410,22 +2426,22 @@
         }
       }
     },
-    "MIDI out is off" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A saída MIDI está desligada"
-          }
-        }
-      }
-    },
     "MIDI out · ch %lld" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Saída MIDI · canal %lld"
+          }
+        }
+      }
+    },
+    "MIDI out is off" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A saída MIDI está desligada"
           }
         }
       }
@@ -2439,6 +2455,9 @@
           }
         }
       }
+    },
+    "Midiot" : {
+
     },
     "Midiot already allows for the output delay. Raise this if notes you play on time are marked late; lower it if they are marked early." : {
       "localizations" : {
@@ -2600,7 +2619,9 @@
         }
       }
     },
-    "MusicXML" : {},
+    "MusicXML" : {
+
+    },
     "Mute layer" : {
       "localizations" : {
         "pt-BR" : {
@@ -2957,6 +2978,22 @@
         }
       }
     },
+    "Off (iCloud)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desligado"
+          }
+        }
+      }
+    },
     "Off (MIDI out)" : {
       "localizations" : {
         "en" : {
@@ -2969,6 +3006,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Desligada"
+          }
+        }
+      }
+    },
+    "On" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligado"
+          }
+        }
+      }
+    },
+    "On · fetching %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligado · buscando %lld"
           }
         }
       }
@@ -3089,6 +3146,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Outros apps, por uma porta chamada Midiot"
+          }
+        }
+      }
+    },
+    "other device" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "outro dispositivo"
           }
         }
       }
@@ -3263,6 +3330,16 @@
         }
       }
     },
+    "Pick a root. Every card shows the keys to press; tap one to hear it." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha uma fundamental. Cada cartão mostra as teclas a pressionar; toque para ouvir."
+          }
+        }
+      }
+    },
     "Piece" : {
       "localizations" : {
         "pt-BR" : {
@@ -3365,6 +3442,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toque a ideia e depois pressione “Guardar últimos 30 s” abaixo. O app esteve ouvindo o tempo todo."
+          }
+        }
+      }
+    },
+    "Plays are the same on every device signed in to your iCloud. If one play is changed on two devices before they sync, both versions are kept, one as a copy." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As peças são as mesmas em todos os dispositivos conectados ao seu iCloud. Se uma peça for alterada em dois dispositivos antes de sincronizar, as duas versões são mantidas, uma delas como cópia."
+          }
+        }
+      }
+    },
+    "Plays in iCloud" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peças no iCloud"
           }
         }
       }
@@ -3589,22 +3686,22 @@
         }
       }
     },
-    "Rhythm %lld" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ritmo %lld"
-          }
-        }
-      }
-    },
     "Rhythm & meter" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ritmo e compasso"
+          }
+        }
+      }
+    },
+    "Rhythm %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritmo %lld"
           }
         }
       }
@@ -3619,22 +3716,22 @@
         }
       }
     },
-    "Right hand" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mão direita"
-          }
-        }
-      }
-    },
     "right hand" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "mão direita"
+          }
+        }
+      }
+    },
+    "Right hand" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mão direita"
           }
         }
       }
@@ -3795,6 +3892,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Partitura"
+          }
+        }
+      }
+    },
+    "Sign in to iCloud on this device, with iCloud Drive on, and your plays will be the same on the Mac and the iPad. Until then they stay on this device." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entre no iCloud neste dispositivo, com o iCloud Drive ativado, e suas peças serão as mesmas no Mac e no iPad. Até lá, elas ficam neste dispositivo."
           }
         }
       }
@@ -4115,6 +4222,26 @@
         }
       }
     },
+    "Tap a chord to hear it and see its keys below. Tap again to clear them." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque num acorde para ouvi-lo e ver as teclas abaixo. Toque de novo para limpá-las."
+          }
+        }
+      }
+    },
+    "Tap notes in the take to select them." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque nas notas da tomada para selecioná-las."
+          }
+        }
+      }
+    },
     "Target" : {
       "localizations" : {
         "pt-BR" : {
@@ -4425,6 +4552,16 @@
         }
       }
     },
+    "Unlocked · tap to lock" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destravado · toque para travar"
+          }
+        }
+      }
+    },
     "Unmute layer" : {
       "localizations" : {
         "pt-BR" : {
@@ -4505,22 +4642,22 @@
         }
       }
     },
-    "Wait mode" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modo de espera"
-          }
-        }
-      }
-    },
     "wait mode" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "modo de espera"
+          }
+        }
+      }
+    },
+    "Wait mode" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de espera"
           }
         }
       }

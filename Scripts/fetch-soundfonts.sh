@@ -29,5 +29,9 @@ else
     mv "$cache/GeneralUser-GS.sf2" "$dest/"
 fi
 
+# The iPad app bundles only the small General MIDI set.
+mkdir -p "$root/Resources/SoundFontsPad"
+cp -f "$dest/GeneralUser-GS.sf2" "$root/Resources/SoundFontsPad/"
+
 rm -rf "$cache"
 ls -lh "$dest"/*.sf2

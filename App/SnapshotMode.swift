@@ -1,3 +1,4 @@
+#if os(macOS)
 import AppKit
 import DesignSystem
 import Library
@@ -342,3 +343,4 @@ enum SnapshotMode {
         try? bitmap.representation(using: .png, properties: [:])?.write(to: url)
     }
 }
+#endif

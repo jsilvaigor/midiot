@@ -1,4 +1,6 @@
+#if os(macOS)
 import AppKit
+#endif
 import DesignSystem
 import MusicCore
 import Sketch
@@ -28,20 +30,24 @@ struct SketchpadView: View {
         VStack(spacing: 0) {
             if let error = model.error { errorBanner(error) }
             if let play = model.play {
-                HStack(spacing: 0) {
-                    cueList(play).frame(width: 248)
-                    Palette.hairline.frame(width: 1)
-                    Group {
-                        if let cue = model.cue {
-                            CueDetail(model: model, play: play, cue: cue)
-                        } else {
-                            EmptyState(systemImage: "text.badge.plus", title: "No cue selected",
-                                       message: "Choose a cue on the left, or add one to a scene.")
+                GeometryReader { proxy in
+                    // A smaller iPad has less to share between the three columns.
+                    let compact = Platform.isPad && proxy.size.width < 1000
+                    HStack(spacing: 0) {
+                        cueList(play).frame(width: compact ? 196 : 248)
+                        Palette.hairline.frame(width: 1)
+                        Group {
+                            if let cue = model.cue {
+                                CueDetail(model: model, play: play, cue: cue)
+                            } else {
+                                EmptyState(systemImage: "text.badge.plus", title: "No cue selected",
+                                           message: "Choose a cue on the left, or add one to a scene.")
+                            }
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        Palette.hairline.frame(width: 1)
+                        SketchAside(model: model, range: app.range).frame(width: compact ? 232 : 288)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    Palette.hairline.frame(width: 1)
-                    SketchAside(model: model, range: app.range).frame(width: 288)
                 }
             } else {
                 noPlay
@@ -143,7 +149,7 @@ struct SketchpadView: View {
                 } label: {
                     Label("Add scene", systemImage: "plus")
                         .font(.sans(13)).foregroundStyle(Palette.textSecondary)
-                        .padding(.horizontal, 8).frame(height: 40).contentShape(Rectangle())
+                        .padding(.horizontal, 8).frame(height: Platform.touch(40)).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -173,7 +179,7 @@ struct SketchpadView: View {
                     Button("Delete play…", role: .destructive) { confirmsDeletePlay = true }
                 } label: {
                     Image(systemName: "ellipsis").font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Palette.textSecondary).frame(width: 32, height: 28).contentShape(Rectangle())
+                        .foregroundStyle(Palette.textSecondary).frame(width: Platform.touch(32), height: Platform.touch(28)).contentShape(Rectangle())
                 }
                 .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
                 .accessibilityLabel(Text("Play options"))
@@ -219,7 +225,7 @@ struct SketchpadView: View {
                     model.addCue(to: scene.id, name: string("New cue"))
                 } label: {
                     Image(systemName: "plus").font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Palette.textSecondary).frame(width: 28, height: 24).contentShape(Rectangle())
+                        .foregroundStyle(Palette.textSecondary).frame(width: Platform.touch(28), height: Platform.touch(24)).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(Text("Add a cue to this scene"))
@@ -250,7 +256,7 @@ struct SketchpadView: View {
                     .accessibilityLabel(Text(SketchNames.status(cue.status)))
             }
             .padding(.horizontal, 10)
-            .frame(minHeight: 40)
+            .frame(minHeight: Platform.touch(40))
             .background(isSelected ? Palette.accentSoft : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .contentShape(Rectangle())
         }
@@ -279,11 +285,21 @@ private struct CueDetail: View {
                 chips
                 takes
                 if let take = model.take { layers(of: take) }
-                if model.take != nil { toolbar }
+                if model.take != nil, !Platform.isPad { toolbar }
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 26)
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        // On the iPad the tools stay in reach: the keyboard leaves little room for scrolling to them.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if model.take != nil, Platform.isPad {
+                toolbar
+                    .padding(.horizontal, 28).padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Palette.background)
+                    .overlay(alignment: .top) { Palette.hairline.frame(height: 1) }
+            }
         }
         .onAppear { targetText = Self.clock(cue.targetSeconds) }
         .onChange(of: cue.id) { targetText = Self.clock(cue.targetSeconds) }
@@ -294,6 +310,8 @@ private struct CueDetail: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("Cue \(play.label(of: cue.id) ?? "")").font(.mono(13)).foregroundStyle(Palette.accent)
                 Spacer()
+                // Exports stay on the Mac: the notation engine behind them is heavy for an iPad.
+                #if os(macOS)
                 HStack(spacing: 8) {
                     SketchButton("MIDI") { export(.midi) }
                     SketchButton("MusicXML") { export(.musicXML) }
@@ -302,7 +320,7 @@ private struct CueDetail: View {
                         Button("Lead sheet") { export(.pdfLeadSheet) }
                     } label: {
                         Text("PDF draft").font(.sans(13)).foregroundStyle(Palette.textPrimary)
-                            .padding(.horizontal, 14).frame(height: 38)
+                            .padding(.horizontal, 14).frame(height: Platform.touch(38))
                             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Palette.hairlineStrong))
                             .contentShape(Rectangle())
                     }
@@ -310,6 +328,7 @@ private struct CueDetail: View {
                 }
                 .disabled(model.exportTake == nil)
                 .opacity(model.exportTake == nil ? 0.45 : 1)
+                #endif
             }
             VStack(alignment: .leading, spacing: 6) {
                 TextField("Cue name", text: Binding(get: { cue.name }, set: { name in model.updateCue { $0.name = name } }))
@@ -350,7 +369,7 @@ private struct CueDetail: View {
                     Text(SketchNames.status(cue.status))
                 }
                 .font(.sans(13)).foregroundStyle(Palette.textPrimary)
-                .padding(.horizontal, 12).frame(height: 34)
+                .padding(.horizontal, 12).frame(height: Platform.touch(34))
                 .background(Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .contentShape(Rectangle())
             }
@@ -483,7 +502,7 @@ private struct CueDetail: View {
                     Spacer(minLength: 4)
                     Image(systemName: "chevron.up.chevron.down").font(.system(size: 10)).foregroundStyle(Palette.textSecondary)
                 }
-                .padding(.horizontal, 12).frame(width: 164, height: 34)
+                .padding(.horizontal, 12).frame(width: 164, height: Platform.touch(34))
                 .background(Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .contentShape(Rectangle())
             }
@@ -509,7 +528,7 @@ private struct CueDetail: View {
     private func layerButton(_ systemImage: String, label: LocalizedStringKey, tint: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage).font(.system(size: 13, weight: .medium)).foregroundStyle(tint)
-                .frame(width: 34, height: 34).contentShape(Rectangle())
+                .frame(width: Platform.touch(34), height: Platform.touch(34)).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .help(Text(label))
@@ -533,7 +552,7 @@ private struct CueDetail: View {
                         Text(model.isOverdubbing ? "Finish layer" : "Overdub a layer").font(.sans(13, weight: .semibold))
                     }
                     .foregroundStyle(Palette.accentInk)
-                    .padding(.horizontal, 14).frame(height: 40)
+                    .padding(.horizontal, 14).frame(height: Platform.touch(40))
                     .background(Palette.accent, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                     .contentShape(Rectangle())
                 }
@@ -553,7 +572,7 @@ private struct CueDetail: View {
                 } else if picked > 0 {
                     if picked == 1 { Text("1 note selected") } else { Text("\(picked) notes selected") }
                 } else {
-                    Text("Click notes in the take to select them.")
+                    (Platform.isPad ? Text("Tap notes in the take to select them.") : Text("Click notes in the take to select them."))
                 }
             }
             .font(.sans(12)).foregroundStyle(model.isOverdubbing ? Palette.accentHighlight : Palette.textTertiary)
@@ -609,12 +628,16 @@ private struct CueDetail: View {
             model.error = string("This take could not be exported.")
             return
         }
+        #if os(macOS)
         let panel = NSSavePanel()
         let name = cue.name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
         panel.nameFieldStringValue = "\(label) \(name).\(format.fileExtension)"
         if let type = UTType(filenameExtension: format.fileExtension) { panel.allowedContentTypes = [type] }
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do { try data.write(to: url) } catch { model.error = error.localizedDescription }
+        #else
+        _ = data
+        #endif
     }
 
     static func clock(_ seconds: Double?) -> String {
@@ -647,7 +670,7 @@ struct SketchButton: View {
             title.font(.sans(13))
         }
         .foregroundStyle(Palette.textPrimary)
-        .padding(.horizontal, 14).frame(height: 40)
+        .padding(.horizontal, 14).frame(height: Platform.touch(40))
         .background(Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Palette.hairlineStrong))
         .contentShape(Rectangle())

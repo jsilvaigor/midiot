@@ -22,6 +22,15 @@ public struct SegmentedControl<Value: Hashable>: View {
         self.options = options
     }
 
+    /// Tall enough that, with the 3 pt frame around it, a segment is a 44 pt target on a touch screen.
+    private static var segmentHeight: CGFloat {
+        #if os(iOS)
+        38
+        #else
+        32
+        #endif
+    }
+
     public var body: some View {
         HStack(spacing: 0) {
             ForEach(options, id: \.value) { option in
@@ -39,7 +48,7 @@ public struct SegmentedControl<Value: Hashable>: View {
                             .fixedSize()
                     }
                     .padding(.horizontal, 12)
-                    .frame(height: 32)
+                    .frame(height: Self.segmentHeight)
                     .background(isOn ? Palette.control : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .contentShape(Rectangle())
                 }
@@ -142,7 +151,11 @@ public struct ToggleChip: View {
             }
             .foregroundStyle(isOn ? Palette.accentHighlight : Palette.textSecondary)
             .padding(.horizontal, showsTitle ? 14 : 12)
+            #if os(iOS)
+            .frame(height: 44)
+            #else
             .frame(height: 40)
+            #endif
             .background(isOn ? Palette.accentSoft : Palette.surfaceRaised.opacity(0.7),
                         in: RoundedRectangle(cornerRadius: 11, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous)

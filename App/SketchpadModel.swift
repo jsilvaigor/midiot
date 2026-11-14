@@ -69,7 +69,7 @@ final class SketchpadModel {
     /// by the output delay.
     @ObservationIgnored var pressCompensation = 0.0
 
-    @ObservationIgnored private let store: PlayStore
+    @ObservationIgnored private var store: PlayStore
     @ObservationIgnored private let capture: CaptureBuffer
     @ObservationIgnored private let piano: SamplerInstrument
     @ObservationIgnored private let palette: PaletteSynth
@@ -103,11 +103,55 @@ final class SketchpadModel {
         self.keyboard = keyboard
     }
 
+    /// The folder of plays on this device, from before iCloud is found.
+    var localStore: PlayStore { store }
+
     func load() {
         plays = store.plays()
         selectedPlayID = UserDefaults.standard.string(forKey: "sketchPlay").flatMap(UUID.init) ?? plays.last?.id
         if play == nil { selectedPlayID = plays.last?.id }
         selectCue(play?.scenes.first { !$0.cues.isEmpty }?.cues.first?.id)
+    }
+
+    // MARK: Plays arriving from another device
+
+    /// Switches to another folder of plays: the iCloud one, once it is found.
+    func use(_ store: PlayStore) {
+        self.store = store
+        reload()
+    }
+
+    /// Reads the plays again, after another device may have changed them. What is selected
+    /// stays selected when it still exists.
+    func reload() {
+        // A take being recorded over must not change underneath the recording.
+        guard !isOverdubbing else { return }
+        let fresh = store.plays()
+        guard !Self.same(fresh, plays) else { return }
+        let cueBefore = cue
+        plays = fresh
+        if play == nil {
+            selectPlay(plays.last?.id)
+        } else if cue == nil {
+            selectedCueID = nil
+            selectCue(play?.scenes.first { !$0.cues.isEmpty }?.cues.first?.id)
+        } else if !Self.same(cue, cueBefore) {
+            // The cue open here was changed elsewhere: steps to undo no longer apply to it.
+            stop()
+            undoStack.removeAll()
+            canUndo = false
+            if take == nil { selectTake(cue?.bestTake?.id) }
+            selectedNotes = []
+        }
+    }
+
+    /// Compared as they would be saved: dates lose their fractions of a second on disk, so a
+    /// play just read back is not `==` to the one in memory.
+    private static func same<T: Encodable>(_ a: T, _ b: T) -> Bool {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.sortedKeys]
+        return (try? encoder.encode(a)) == (try? encoder.encode(b))
     }
 
     // MARK: Selection

@@ -44,8 +44,48 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.music
         INFOPLIST_KEY_CFBundleDisplayName: Midiot
-        CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: "-"
+        # Signed with the team so the app may use iCloud for plays.
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 99U97P63K6
+        CODE_SIGN_ENTITLEMENTS: App/Midiot.entitlements
+        SWIFT_EMIT_LOC_STRINGS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  # The iPad app: Sketchpad, Stage and Chords, for rehearsals and away from the desk.
+  MidiotPad:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - App
+      # Only the small General MIDI set; the grand piano samples are too big for an iPad.
+      - path: Resources/SoundFontsPad
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - { package: MidiotKit, product: MusicCore }
+      - { package: MidiotKit, product: MidiIO }
+      - { package: MidiotKit, product: Sound }
+      - { package: MidiotKit, product: ScoreImport }
+      - { package: MidiotKit, product: Notation }
+      - { package: MidiotKit, product: Practice }
+      - { package: MidiotKit, product: Library }
+      - { package: MidiotKit, product: DesignSystem }
+      - { package: MidiotKit, product: Sketch }
+    settings:
+      base:
+        PRODUCT_NAME: Midiot
+        PRODUCT_BUNDLE_IDENTIFIER: dev.midiot.Midiot
+        TARGETED_DEVICE_FAMILY: "2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.music
+        INFOPLIST_KEY_CFBundleDisplayName: Midiot
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UIRequiresFullScreen: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIBackgroundModes: audio
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 99U97P63K6
+        CODE_SIGN_ENTITLEMENTS: App/Midiot.entitlements
         SWIFT_EMIT_LOC_STRINGS: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 schemes:
@@ -53,5 +93,11 @@ schemes:
     build:
       targets:
         Midiot: all
+    run:
+      config: Debug
+  MidiotPad:
+    build:
+      targets:
+        MidiotPad: all
     run:
       config: Debug

@@ -21,3 +21,5 @@ Run the package tests with `swift test` inside `MidiotKit/`.
 - [Milestone 2 plan](docs/MILESTONE-2.md)
 - [Milestone 3 plan](docs/MILESTONE-3.md)
 - [Milestone 4 plan](docs/MILESTONE-4.md)
+- [Midiot on the iPad](docs/IPAD.md)
+- [Check later](docs/CHECK-LATER.md)

@@ -25,8 +25,30 @@ struct SettingsView: View {
                     Text(verbatim: "C D E").tag(NoteNaming.letters)
                     Text(verbatim: "Dó Ré Mi").tag(NoteNaming.solfege)
                 }
-                Stepper(value: $model.dailyGoal, in: 5...120, step: 5) {
-                    LabeledContent("Daily goal") { Text("\(Int(model.dailyGoal)) min").font(.readoutSmall) }
+                // Practice stays on the Mac, so its goal and timing settings do too.
+                if !Platform.isPad {
+                    Stepper(value: $model.dailyGoal, in: 5...120, step: 5) {
+                        LabeledContent("Daily goal") { Text("\(Int(model.dailyGoal)) min").font(.readoutSmall) }
+                    }
+                }
+            }
+
+            Section {
+                LabeledContent("Plays in iCloud") {
+                    switch model.cloud.status {
+                    case .checking: Text("Checking…").foregroundStyle(Palette.textSecondary)
+                    case .unavailable: Text("Off (iCloud)").foregroundStyle(Palette.textSecondary)
+                    case .on(fetching: 0): Text("On")
+                    case let .on(fetching: count): Text("On · fetching \(count)")
+                    }
+                }
+            } footer: {
+                if model.cloud.status == .unavailable {
+                    Text("Sign in to iCloud on this device, with iCloud Drive on, and your plays will be the same on the Mac and the iPad. Until then they stay on this device.")
+                        .font(.sans(12)).foregroundStyle(Palette.textSecondary)
+                } else {
+                    Text("Plays are the same on every device signed in to your iCloud. If one play is changed on two devices before they sync, both versions are kept, one as a copy.")
+                        .font(.sans(12)).foregroundStyle(Palette.textSecondary)
                 }
             }
 
@@ -91,15 +113,17 @@ struct SettingsView: View {
                     LabeledContent("Output delay") {
                         Text("\(Int((latency.total * 1000).rounded())) ms").font(.readoutSmall)
                     }
-                    LabeledContent("Timing adjustment") {
-                        HStack(spacing: 12) {
-                            Slider(value: $model.timingAdjustment, in: -100...200, step: 5).frame(width: 180)
-                            Text("\(Int(model.timingAdjustment)) ms").font(.readoutSmall).frame(width: 64, alignment: .trailing)
+                    if !Platform.isPad {
+                        LabeledContent("Timing adjustment") {
+                            HStack(spacing: 12) {
+                                Slider(value: $model.timingAdjustment, in: -100...200, step: 5).frame(width: 180)
+                                Text("\(Int(model.timingAdjustment)) ms").font(.readoutSmall).frame(width: 64, alignment: .trailing)
+                            }
                         }
+                        Text("Midiot already allows for the output delay. Raise this if notes you play on time are marked late; lower it if they are marked early.")
+                            .font(.sans(12))
+                            .foregroundStyle(Palette.textSecondary)
                     }
-                    Text("Midiot already allows for the output delay. Raise this if notes you play on time are marked late; lower it if they are marked early.")
-                        .font(.sans(12))
-                        .foregroundStyle(Palette.textSecondary)
                     if latency.total > noticeableDelay {
                         Label(
                             "This output adds noticeable delay. Use wired headphones or speakers for practice.",
@@ -130,7 +154,9 @@ struct SettingsView: View {
                 }
                 Button(isLearning ? "Cancel" : "Learn (control)") { model.learning = isLearning ? nil : action }
                     .frame(minWidth: 64)
-                Button { model.clearControl(action) } label: { Image(systemName: "xmark") }
+                Button { model.clearControl(action) } label: {
+                    Image(systemName: "xmark").frame(minWidth: Platform.touch(0), minHeight: Platform.touch(0))
+                }
                     .disabled(isLearning || model.controlMap.source(of: action) == nil)
                     .help(Text("Remove"))
                     .accessibilityLabel(Text("Remove"))

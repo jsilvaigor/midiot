@@ -68,7 +68,7 @@ struct SketchAside: View {
                         .frame(maxWidth: .infinity)
                     stepButton("plus", label: "Faster") { model.bpm = min(model.bpm + 2, 208) }
                 }
-                .frame(height: 40)
+                .frame(height: Platform.touch(40))
                 .background(Palette.surfaceRaised.opacity(0.7), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Palette.hairline))
                 ToggleChip(Text("Metronome"), systemImage: "metronome", isOn: model.metronomeIsOn, showsTitle: false) {
@@ -81,7 +81,7 @@ struct SketchAside: View {
     private func stepButton(_ systemImage: String, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage).font(.system(size: 12, weight: .medium)).foregroundStyle(Palette.textSecondary)
-                .frame(width: 44, height: 40).contentShape(Rectangle())
+                .frame(width: 44, height: Platform.touch(40)).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .buttonRepeatBehavior(.enabled)
@@ -156,7 +156,9 @@ struct SketchAside: View {
                 }
                 .accessibilityAddTraits(isShown ? .isSelected : [])
             }
-            Text("Point at a chord to see its keys below. Click to hear it.")
+            // A touch screen has no pointing: a tap does both.
+            (Platform.isPad ? Text("Tap a chord to hear it and see its keys below. Tap again to clear them.")
+                : Text("Point at a chord to see its keys below. Click to hear it."))
                 .font(.sans(12)).foregroundStyle(Palette.textTertiary)
         }
     }
@@ -178,7 +180,7 @@ struct SketchAside: View {
                         Text(SketchNames.mood(mood))
                             .font(.sans(13, weight: isOn ? .medium : .regular))
                             .foregroundStyle(isOn ? Palette.handLeft.mix(with: .white, by: 0.45) : Palette.textSecondary)
-                            .padding(.horizontal, 12).frame(height: 34)
+                            .padding(.horizontal, 12).frame(height: Platform.touch(34))
                             .background(isOn ? Palette.handLeft.opacity(0.16) : .clear, in: Capsule())
                             .overlay(Capsule().strokeBorder(isOn ? Palette.handLeft.opacity(0.6) : Palette.hairlineStrong))
                             .contentShape(Capsule())
@@ -236,7 +238,7 @@ struct SketchAside: View {
         Button(action: action) {
             title.font(.sans(12, weight: isOn ? .medium : .regular))
                 .foregroundStyle(isOn ? Palette.accentHighlight : Palette.textPrimary)
-                .padding(.horizontal, 9).frame(minHeight: 26)
+                .padding(.horizontal, 9).frame(minHeight: Platform.touch(26))
                 .background(isOn ? Palette.accentSoft : Palette.surfaceRaised.opacity(0.8), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 .contentShape(Rectangle())
         }
@@ -296,7 +298,7 @@ struct CaptureBar: View {
                     model.keepLast(seconds: 30)
                 } label: {
                     Text("Keep last 30 s").font(.sans(13, weight: .medium)).foregroundStyle(Palette.accentHighlight)
-                        .padding(.horizontal, 14).frame(height: 40)
+                        .padding(.horizontal, 14).frame(height: Platform.touch(40))
                         .background(Palette.accentSoft, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Palette.accent.opacity(0.45)))
                         .contentShape(Rectangle())

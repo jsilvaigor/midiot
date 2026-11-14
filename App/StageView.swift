@@ -32,6 +32,8 @@ struct StageView: View {
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 20)
+                // Without the Launchkey plugged in, cues can still be played by touch.
+                if Platform.isPad { keyboardStrip }
                 pads
             } else {
                 nothingToPerform
@@ -122,7 +124,11 @@ struct StageView: View {
             .help(canLeave ? Text(verbatim: "") : Text("Unlock to leave the stage"))
 
             if let play = model.play {
-                Button { model.changePlay() } label: {
+                Button {
+                    model.changePlay()
+                    // Plays changed on another device were held back during the performance.
+                    if model.isChoosing { app.applyWaitingPlays() }
+                } label: {
                     Text(verbatim: play.title).font(.sans(13)).tracking(1.5).textCase(.uppercase)
                         .foregroundStyle(Palette.textSecondary).lineLimit(1)
                         .frame(height: 44).contentShape(Rectangle())
@@ -271,7 +277,7 @@ struct StageView: View {
     private func tempoStep(_ systemImage: String, label: LocalizedStringKey, change: @escaping (inout StagePreset) -> Void) -> some View {
         Button { model.updatePreset(change) } label: {
             Image(systemName: systemImage).font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Palette.textSecondary).frame(width: 32, height: 32)
+                .foregroundStyle(Palette.textSecondary).frame(width: Platform.touch(32), height: Platform.touch(32))
                 .background(Palette.surfaceRaised, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .contentShape(Rectangle())
         }
@@ -382,6 +388,23 @@ struct StageView: View {
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
     }
 
+    // MARK: Keyboard strip
+
+    /// A short playable keyboard above the pads, on the iPad only.
+    private var keyboardStrip: some View {
+        let whiteKeys = app.range.pitches.count { !$0.isBlackKey }
+        let pressed = Palette.textPrimary.mix(with: Palette.accent, by: 0.5)
+        return KeyboardView(
+            range: app.range, highlights: Dictionary(uniqueKeysWithValues: app.pressed.map { ($0, pressed) }), naming: naming,
+            onPress: app.mouseDown(on:), onRelease: app.mouseUp(on:)
+        )
+        .frame(height: 64)
+        .frame(maxWidth: CGFloat(whiteKeys) * 44)
+        .padding(.horizontal, 32)
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 14)
+    }
+
     // MARK: Pads
 
     private var pads: some View {
@@ -487,12 +510,20 @@ private struct LockButton: View {
         let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
         HStack(spacing: 10) {
             Image(systemName: isLocked ? "lock.fill" : "lock.open.fill").font(.system(size: 14, weight: .medium))
-            Text(isLocked ? "Locked · hold to unlock" : "Unlocked · click to lock").font(.sans(14))
+            Text(isLocked ? "Locked · hold to unlock" : Platform.isPad ? "Unlocked · tap to lock" : "Unlocked · click to lock").font(.sans(14))
         }
         .foregroundStyle(color.mix(with: .white, by: 0.2))
         .padding(.horizontal, 16)
         .frame(height: 44)
         .background(color.opacity(isHeld ? 0.22 : 0.08), in: shape)
+        .background(alignment: .leading) {
+            // The hold, filling over its 0.8 s, so a finger can see the unlock coming.
+            if Platform.isPad, isHeld, isLocked {
+                color.opacity(0.3).frame(maxWidth: .infinity).clipShape(shape)
+                    .transition(.asymmetric(insertion: .scale(scale: 0, anchor: .leading), removal: .opacity))
+            }
+        }
+        .animation(Platform.isPad ? (isHeld ? .linear(duration: 0.8) : .easeOut(duration: 0.15)) : nil, value: isHeld)
         .overlay(shape.strokeBorder(color.opacity(isLocked ? 0.35 : 0.5)))
         .contentShape(Rectangle())
         .gesture(

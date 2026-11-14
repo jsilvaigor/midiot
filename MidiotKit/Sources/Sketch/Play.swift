@@ -132,32 +132,59 @@ public struct PlayStore: Sendable {
     public func plays() -> [Play] {
         let files = (try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? []
         return files.filter { $0.pathExtension == "json" }
-            .compactMap { try? Data(contentsOf: $0) }
-            .compactMap { try? Self.decoder.decode(Play.self, from: $0) }
+            .compactMap { read($0) }
             .sorted { ($0.createdAt, $0.id.uuidString) < ($1.createdAt, $1.id.uuidString) }
+    }
+
+    public func play(_ id: UUID) -> Play? {
+        read(url(for: id))
     }
 
     public func save(_ play: Play) throws {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        try Self.encoder.encode(play).write(to: url(for: play.id), options: .atomic)
+        let data = try Self.encoder.encode(play)
+        try coordinate(writingTo: url(for: play.id)) { try data.write(to: $0, options: .atomic) }
     }
 
     public func delete(_ play: Play) throws {
-        try FileManager.default.removeItem(at: url(for: play.id))
+        try coordinate(writingTo: url(for: play.id), deleting: true) { try FileManager.default.removeItem(at: $0) }
     }
 
-    private func url(for id: UUID) -> URL {
+    // Reads and writes go through a file coordinator so they never cross a copy of the file
+    // arriving from iCloud (requirement PL-3 across devices). For a local folder this costs nothing.
+
+    private func read(_ url: URL) -> Play? {
+        var result: Play?
+        var error: NSError?
+        NSFileCoordinator(filePresenter: nil).coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { url in
+            result = (try? Data(contentsOf: url)).flatMap { try? Self.decoder.decode(Play.self, from: $0) }
+        }
+        return result
+    }
+
+    private func coordinate(writingTo url: URL, deleting: Bool = false, _ body: (URL) throws -> Void) throws {
+        var coordinationError: NSError?
+        var bodyError: Error?
+        NSFileCoordinator(filePresenter: nil).coordinate(
+            writingItemAt: url, options: deleting ? .forDeleting : .forReplacing, error: &coordinationError
+        ) { url in
+            do { try body(url) } catch { bodyError = error }
+        }
+        if let error = coordinationError ?? bodyError { throw error }
+    }
+
+    func url(for id: UUID) -> URL {
         root.appendingPathComponent(id.uuidString).appendingPathExtension("json")
     }
 
-    private static let encoder: JSONEncoder = {
+    static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.sortedKeys]
         return encoder
     }()
 
-    private static let decoder: JSONDecoder = {
+    static let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder
